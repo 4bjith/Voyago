@@ -1,7 +1,61 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from "react-toastify";
+import UserStore from "../zustand/UserStore";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axiosClient";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const emailRef = useRef();
+  const passwordRef = useRef();
+  const { addToken } = UserStore();
+  const navigate = useNavigate();
+
+  const loginSubmit = async () => {
+    const email = emailRef.current?.value;
+    const password = passwordRef.current?.value;
+
+    if (!email || !password) {
+      toast.error("Please enter both email and password.");
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your system.");
+      return;
+    }
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const location = {
+          type: "Point",
+          coordinates: [position.coords.longitude, position.coords.latitude],
+        };
+        try {
+          const response = await api.post("/login", {
+            email,
+            password,
+            location,
+          });
+          addToken(response.data.token);
+          toast.success("Log in successfull !!");
+          navigate("/");
+        } catch (err) {
+          console.error("Login error:", err);
+          toast.error(err.response?.data?.message || "Login failed");
+        } finally {
+          setLoading(false);
+        }
+      },
+      () => {
+        toast.error("Unable to retrieve your location.");
+        setLoading(false);
+      }
+    );
+  };
+
   return (
     <div className="w-screen h-screen bg-black flex items-center justify-center">
       <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center">
@@ -23,6 +77,7 @@ export default function Login() {
               type="email"
               name="email"
               id="email"
+              ref={emailRef}
               placeholder="Enter email .."
               className="w-full px-4 py-3 rounded-lg bg-white bg-opacity-20 text-black placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-white mb-3 border border-gray-300"
             />
@@ -31,6 +86,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 id="password"
+                ref={passwordRef}
                 placeholder="Enter password"
                 className="w-full px-4 py-3 rounded-lg bg-white bg-opacity-20 text-black placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-white border border-gray-300"
               />
@@ -74,8 +130,38 @@ export default function Login() {
                 )}
               </button>
             </div>
-            <button className="w-full py-3 rounded-lg bg-black text-white font-semibold hover:bg-white hover:text-black transition duration-300 border border-white border-opacity-30 shadow">
-              Log in
+            <button
+              onClick={loginSubmit}
+              disabled={loading}
+              className={`w-full py-3 rounded-lg bg-black text-white font-semibold transition duration-300 border border-white border-opacity-30 shadow flex items-center justify-center ${
+                loading
+                  ? "opacity-70 cursor-not-allowed"
+                  : "hover:bg-white hover:text-black"
+              }`}
+            >
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              ) : null}
+              {loading ? "Logging in..." : "Log in"}
             </button>
             <p className="text-black text-sm mt-2">
               Don't have an account?{" "}
