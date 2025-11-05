@@ -41,7 +41,7 @@ export default function Home() {
     <div className="w-full min-h-screen bg-white overflow-hidden">
       {/* Navbar */}
       <div className="w-full h-[14%] bg-black text-white flex justify-between items-center px-5 py-3 relative z-50">
-        <div className="font-semibold tracking-wider text-xl">Uber</div>
+        <div className="font-semibold tracking-wider text-xl">Voyago</div>
 
         <div className="hidden md:flex md:w-[40%] md:justify-end">
           <NavMenu />
