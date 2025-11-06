@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 import NavMenu from "../components/NavMenu";
+import { useQuery } from "@tanstack/react-query";
+import api from "../api/axiosClient";
+import UserStore from "../zustand/UserStore";
+import CurrentMap from "../components/CurrentMap";
 
 export default function Home() {
+  // All hooks at the top, unconditionally
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [location, setLocation] = useState(null);
+  const token = UserStore((state) => state.token); // taking token from zustand store
 
   const slides = [
     {
@@ -29,13 +36,75 @@ export default function Home() {
     },
   ];
 
-  // Auto-slide every 4 seconds
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["userLocation"],
+    queryFn: async () => {
+      const res = await api.get("/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.data;
+    },
+    retry: false, // avoid looping on 403
+    enabled: !!token, // run only if token
+  });
+
+ useEffect(() => {
+  const coords = data?.location?.coordinates;
+  if (Array.isArray(coords)) {
+    const [lng, lat] = coords.map(Number);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      setLocation({ lat, lng });
+      return;
+    }
+  }
+  setLocation(null);
+}, [data]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, []); // Only run once, slides is defined below
+
+  // Conditional rendering after all hooks
+  if (isLoading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <svg
+          className="animate-spin h-8 w-8 text-gray-600 mr-2"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          ></path>
+        </svg>
+        <span>Loading user location...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center text-red-600">
+        <span>Error loading user location.</span>
+      </div>
+    );
+  }
+
+  // ...existing code...
 
   return (
     <div className="w-full min-h-screen bg-white overflow-hidden">
@@ -133,11 +202,11 @@ export default function Home() {
         </div>
 
         <div className="md:w-1/2 w-full flex justify-center items-center">
-          <div className="bg-blue-400 rounded-2xl shadow-lg w-full h-[260px] md:h-[340px] flex items-center justify-center">
-            {/* You can add an image or illustration here for visual appeal */}
-            <span className="text-white text-2xl font-bold">
-              Your Ride Awaits!
-            </span>
+          <div className="bg-blue-400 rounded-2xl shadow-lg w-full h-[260px] md:h-[340px] flex items-center justify-center overflow-hidden relative">
+            {/* Ensure the map fills the div */}
+            <div className="absolute inset-0">
+              <CurrentMap currentLocation={location} />
+            </div>
           </div>
         </div>
       </div>
