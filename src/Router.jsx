@@ -4,8 +4,27 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RideBooking from "./pages/RideBooking";
+import io from "socket.io-client"
+import { useEffect, useRef } from "react";
+
 
 function Router() {
+  const socketRef = useRef();
+
+  useEffect(() => {
+    socketRef.current=io("http://localhost:8080",{
+      transports: ["websocket"],
+      reconnection: true,
+    })
+
+    socketRef.current.on("connect",()=>{
+      console.log("connected to Socket.IO: ",socketRef.current.id);
+    })
+
+    socketRef.current.on("disconnecte",()=>{
+      console.log("Disconnected from socket.IO");
+    })
+  }, [socketRef])
   return (
     <>
       <BrowserRouter>

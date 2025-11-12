@@ -4,6 +4,8 @@ import NavMenu from "../components/NavMenu";
 import LocationPicker from "../components/LocationPicker";
 import { toast } from "react-toastify";
 import CurrentMap2 from "../components/CurrentMap2";
+import { useQuery } from "@tanstack/react-query"
+import api from "../api/axiosClient"
 
 export default function RideBooking() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,6 +14,9 @@ export default function RideBooking() {
   const [suggestion, setSuggestion] = useState([]);
   const [route, setRoute] = useState([]);
   const [distance, setDistance] = useState(null);
+
+  
+  
 
   const token = UserStore((state) => state.token);
 
@@ -40,6 +45,7 @@ export default function RideBooking() {
       toast.error("Please select both pickup and dropoff locations");
       return;
     }
+   
 
     try {
       const apiKey =
@@ -60,6 +66,7 @@ export default function RideBooking() {
 
       setRoute(coords);
       setDistance(calculateDistance(pickupLocation, dropoffLocation));
+      
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch route. Please try again.");
@@ -106,6 +113,20 @@ export default function RideBooking() {
     setSuggestion([]);
   };
 
+  
+  // Fetch nearby drivers
+  // const {data, isLoading, isError} = useQuery({
+  //   queryKey: ["loc"],
+  //   queryFn: async () => {
+  //     const res = await api.get("/users",{
+  //       headers: {Authorization: `Bearer ${token}`}
+  //     })
+  //     return res.data;
+  //   },
+  //   retry: false,
+  //   enabled: !!token,
+  // })
+  // console.log("user data is ",data);
   return (
     <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
       {/* Navbar */}

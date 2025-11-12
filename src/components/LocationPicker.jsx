@@ -1,6 +1,7 @@
 import { FaDotCircle } from "react-icons/fa";
 import { FiNavigation } from "react-icons/fi";
 import { TbSquareDotFilled } from "react-icons/tb";
+import { toast } from "react-toastify";
 
 export default function LocationPicker({
   pickupRef,
@@ -12,7 +13,8 @@ export default function LocationPicker({
   distance,
 }) {
   const handleBookRide = () => {
-    alert("Ride booked! (Demo)");
+    console.log("pickup cord",pickupRef.current.location.lat)
+    toast(`Ride booked! (Demo) ${pickupRef.current.value}`);
   };
 
   return (
