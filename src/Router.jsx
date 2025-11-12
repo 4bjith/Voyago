@@ -5,11 +5,16 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RideBooking from "./pages/RideBooking";
 import io from "socket.io-client"
-import { useEffect, useRef } from "react";
-
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "./api/axiosClient";
+import UserStore from "./zustand/UserStore";
 
 function Router() {
   const socketRef = useRef();
+  
+
+ 
 
   useEffect(() => {
     socketRef.current=io("http://localhost:8080",{
@@ -32,7 +37,7 @@ function Router() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/bookride" element={<RideBooking />} />
+          <Route path="/bookride" element={<RideBooking socketRef={socketRef}  />}/>
         </Routes>
 
         <ToastContainer

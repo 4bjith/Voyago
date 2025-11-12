@@ -1,26 +1,25 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import UserStore from "../zustand/UserStore";
 import NavMenu from "../components/NavMenu";
 import LocationPicker from "../components/LocationPicker";
 import { toast } from "react-toastify";
 import CurrentMap2 from "../components/CurrentMap2";
-import { useQuery } from "@tanstack/react-query"
-import api from "../api/axiosClient"
+import { useQuery } from "@tanstack/react-query";
+import api from "../api/axiosClient";
 
-export default function RideBooking() {
+export default function RideBooking({ socketRef }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pickupRef = useRef();
   const dropoffRef = useRef();
   const [suggestion, setSuggestion] = useState([]);
   const [route, setRoute] = useState([]);
   const [distance, setDistance] = useState(null);
-
-  
-  
+  const [drivers, setDrivers] = useState([]);
+  const [coords, setCoords] = useState(null); // ✅ store geolocation here
 
   const token = UserStore((state) => state.token);
 
-  // ✅ Calculate distance
+  // ✅ Calculate distance (Haversine formula)
   const calculateDistance = (coord1, coord2) => {
     if (!coord1 || !coord2) return;
     const toRad = (deg) => (deg * Math.PI) / 180;
@@ -36,6 +35,32 @@ export default function RideBooking() {
     return (R * c).toFixed(2);
   };
 
+  // ✅ Get Current Location (async)
+  const getCurrentLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by your browser"));
+      } else {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            resolve({ latitude, longitude });
+          },
+          (error) => {
+            reject(error);
+          }
+        );
+      }
+    });
+  };
+
+  // ✅ Fetch current coordinates once
+  useEffect(() => {
+    getCurrentLocation()
+      .then(setCoords)
+      .catch((err) => console.error("Error getting location:", err));
+  }, []);
+
   // ✅ Show route
   const showRoute = async () => {
     const pickupLocation = pickupRef.current.location;
@@ -45,7 +70,6 @@ export default function RideBooking() {
       toast.error("Please select both pickup and dropoff locations");
       return;
     }
-   
 
     try {
       const apiKey =
@@ -66,7 +90,6 @@ export default function RideBooking() {
 
       setRoute(coords);
       setDistance(calculateDistance(pickupLocation, dropoffLocation));
-      
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch route. Please try again.");
@@ -113,20 +136,31 @@ export default function RideBooking() {
     setSuggestion([]);
   };
 
-  
-  // Fetch nearby drivers
-  // const {data, isLoading, isError} = useQuery({
-  //   queryKey: ["loc"],
-  //   queryFn: async () => {
-  //     const res = await api.get("/users",{
-  //       headers: {Authorization: `Bearer ${token}`}
-  //     })
-  //     return res.data;
-  //   },
-  //   retry: false,
-  //   enabled: !!token,
-  // })
-  // console.log("user data is ",data);
+  // ✅ React Query: Fetch nearby drivers
+  const {
+    data: nearbyData,
+    isLoading: loadingDrivers,
+    error: driverError,
+  } = useQuery({
+    queryKey: ["nearbyDrivers", coords],
+    queryFn: async () => {
+      const res = await api.get(
+        `/nearby?lat=${coords.latitude}&lng=${coords.longitude}`
+      );
+      return res.data;
+    },
+    enabled: !!coords,
+  });
+
+  // ✅ Update driver list when data changes
+  useEffect(() => {
+    if (nearbyData?.drivers) {
+      setDrivers(nearbyData.drivers);
+    }
+  }, [nearbyData]);
+
+  console.log("Drivers:", drivers);
+
   return (
     <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
       {/* Navbar */}
@@ -180,12 +214,12 @@ export default function RideBooking() {
             showRoute={showRoute}
             distance={distance}
           />
-          
+        
         </div>
 
         {/* Right: Map */}
         <div className="w-full md:w-[60%] h-[50vh] md:h-auto overflow-hidden">
-          <CurrentMap2 route={route} />
+          <CurrentMap2 route={route} drivers={drivers} />
         </div>
       </div>
     </div>
