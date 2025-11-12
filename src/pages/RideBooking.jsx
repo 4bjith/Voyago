@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import UserStore from "../zustand/UserStore";
 import NavMenu from "../components/NavMenu";
-import CurrentMap from "../components/CurrentMap";
 import LocationPicker from "../components/LocationPicker";
 import { toast } from "react-toastify";
+import CurrentMap2 from "../components/CurrentMap2";
 
 export default function RideBooking() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,7 +15,7 @@ export default function RideBooking() {
 
   const token = UserStore((state) => state.token);
 
-  // ✅ Calculate distance using Haversine formula
+  // ✅ Calculate distance
   const calculateDistance = (coord1, coord2) => {
     if (!coord1 || !coord2) return;
     const toRad = (deg) => (deg * Math.PI) / 180;
@@ -31,7 +31,7 @@ export default function RideBooking() {
     return (R * c).toFixed(2);
   };
 
-  // ✅ Fetch and display route on map
+  // ✅ Show route
   const showRoute = async () => {
     const pickupLocation = pickupRef.current.location;
     const dropoffLocation = dropoffRef.current.location;
@@ -66,7 +66,7 @@ export default function RideBooking() {
     }
   };
 
-  // ✅ Fetch place suggestions
+  // ✅ Fetch suggestions
   const fetchPlaces = async (query, type) => {
     if (!query.trim()) return;
     try {
@@ -89,7 +89,7 @@ export default function RideBooking() {
     }
   };
 
-  // ✅ Handle suggestion click
+  // ✅ Handle selection
   const handleSelectPlace = (place) => {
     if (place.type === "pickup") {
       pickupRef.current.value = place.name;
@@ -99,7 +99,6 @@ export default function RideBooking() {
       dropoffRef.current.location = { lat: place.lat, lng: place.lon };
     }
 
-    // Show route if both locations selected
     if (pickupRef.current?.location && dropoffRef.current?.location) {
       showRoute();
     }
@@ -108,9 +107,9 @@ export default function RideBooking() {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col">
+    <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
       {/* Navbar */}
-      <div className="w-full h-[14%] bg-black text-white flex justify-between items-center px-5 py-3 relative z-50">
+      <div className="w-full bg-black text-white flex justify-between items-center px-5 py-4 relative z-50">
         <div className="font-semibold tracking-wider text-xl">Voyago</div>
 
         <div className="hidden md:flex md:w-[40%] md:justify-end">
@@ -140,17 +139,17 @@ export default function RideBooking() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       {menuOpen && (
-        <div className="absolute top-[14%] left-0 w-full bg-black flex flex-col items-center py-5 z-50 md:hidden">
+        <div className="absolute top-[60px] left-0 w-full bg-black flex flex-col items-center py-5 z-50 md:hidden">
           <NavMenu />
         </div>
       )}
 
-      {/* Main Split Layout */}
-      <div className="flex-1 flex flex-col md:flex-row w-full">
-        {/* Left: Location Picker (40%) */}
-        <div className="w-full md:w-[40%] bg-white p-6 overflow-y-auto border-r">
+      {/* Main Layout */}
+      <div className="flex flex-col-reverse md:flex-row grow overflow-hidden">
+        {/* Left: Location Picker */}
+        <div className="w-full md:w-[40%] bg-white p-6 overflow-y-auto max-h-[calc(100vh-64px)]">
           <LocationPicker
             pickupRef={pickupRef}
             dropoffRef={dropoffRef}
@@ -160,11 +159,12 @@ export default function RideBooking() {
             showRoute={showRoute}
             distance={distance}
           />
+          
         </div>
 
-        {/* Right: Map (60%) */}
-        <div className="w-full md:w-[60%] h-[50vh] md:h-auto relative">
-          <CurrentMap route={route} />
+        {/* Right: Map */}
+        <div className="w-full md:w-[60%] h-[50vh] md:h-auto overflow-hidden">
+          <CurrentMap2 route={route} />
         </div>
       </div>
     </div>

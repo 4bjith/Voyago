@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 import UserStore from "../zustand/UserStore";
 import CurrentMap from "../components/CurrentMap";
+import { useNavigate } from "react-router-dom";
 
 // Optional utility if you plan to handle expired tokens later
 const removeTokenIfExpired = (error, removeToken) => {
@@ -16,6 +17,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
+    const navigate = useNavigate();
 
   const slides = [
     {
@@ -139,7 +141,7 @@ export default function Home() {
             your destination, confirm your driver, and enjoy the journey with
             comfort and safety at every step.
           </p>
-          <button className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-300 font-semibold shadow-md">
+          <button onClick={()=>navigate("/bookride")} className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-300 font-semibold shadow-md">
             Book Now
           </button>
         </div>
@@ -164,7 +166,7 @@ export default function Home() {
             offers. Stay up to date with your ride history and enjoy a
             personalized experience every time you travel with Uber.
           </p>
-          <button className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-300 font-semibold shadow-md">
+          <button onClick={()=>navigate("/login")} className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-300 font-semibold shadow-md">
             Log in to your account
           </button>
         </div>

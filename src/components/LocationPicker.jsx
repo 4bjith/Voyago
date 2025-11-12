@@ -85,7 +85,7 @@ export default function LocationPicker({
           Show Route
         </button>
         <button
-          className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-green-700 transition"
+          className="bg-black text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-gray-700 transition"
           onClick={handleBookRide}
         >
           Book Ride
