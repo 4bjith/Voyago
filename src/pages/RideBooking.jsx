@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import CurrentMap2 from "../components/CurrentMap2";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
+import DriverCards from "../components/DriverCards";
 
 export default function RideBooking({ socketRef }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -214,7 +215,18 @@ export default function RideBooking({ socketRef }) {
             showRoute={showRoute}
             distance={distance}
           />
-        
+
+         <div className=" w-full h-auto mt-8 ">
+           {drivers.map((items) => (
+            <DriverCards
+              name={items.name}
+              mobile={items.mobile}
+              profile={items.profileImg}
+              vehicle={items.vehicle}
+              licence={items.licence}
+            />
+          ))}
+         </div>
         </div>
 
         {/* Right: Map */}

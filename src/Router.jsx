@@ -9,13 +9,11 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "./api/axiosClient";
 import UserStore from "./zustand/UserStore";
+import AccountManager from "./pages/AccountManager";
 
 function Router() {
   const socketRef = useRef();
   
-
- 
-
   useEffect(() => {
     socketRef.current=io("http://localhost:8080",{
       transports: ["websocket"],
@@ -38,6 +36,7 @@ function Router() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/bookride" element={<RideBooking socketRef={socketRef}  />}/>
+          <Route path="/account" element={<AccountManager />} />
         </Routes>
 
         <ToastContainer
