@@ -1,6 +1,6 @@
 export default function DriverCards(props) {
   return (
-    <div className="w-[90%] flex items-center gap-4 bg-white shadow-md rounded-2xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 mb-5">
+    <div className="w-[90%] bg-gray-100 flex items-center gap-4 bg-white shadow-md rounded-2xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 mb-5">
       
       {/* Profile Image */}
       <div className="w-24 h-24 shrink-0">
@@ -18,12 +18,14 @@ export default function DriverCards(props) {
       </div>
 
       {/* Driver Details */}
-      <div className="flex flex-col w-[60%]">
+      <div className="flex flex-col items-start w-[60%]">
         <h1 className="text-lg font-semibold text-gray-800">Driver Name{props.name}</h1>
         <p className="text-gray-600 text-sm">Mobile No. {props.mobile}</p>
         <p className="text-gray-600 text-sm">Vehicle No.{props.vehicle}</p>
         <p className="text-gray-600 text-sm">Licence No.{props.licence}</p>
+        <button className=" px-4 py-1 bg-gray-700 text-white rounded-lg cursor-pointer ">book</button>
       </div>
+      
     </div>
   );
 }

@@ -7,6 +7,7 @@ import CurrentMap2 from "../components/CurrentMap2";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 import DriverCards from "../components/DriverCards";
+import RideForm from "../components/RideForm";
 
 export default function RideBooking({ socketRef }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -217,7 +218,9 @@ export default function RideBooking({ socketRef }) {
           />
 
          <div className=" w-full h-auto mt-8 ">
-           {drivers.map((items) => (
+           {drivers
+           .filter((d)=> d.status === "online")
+           .map((items) => ( 
             <DriverCards
               name={items.name}
               mobile={items.mobile}
@@ -227,10 +230,13 @@ export default function RideBooking({ socketRef }) {
             />
           ))}
          </div>
+         <div className="">
+          <RideForm />
+         </div>
         </div>
 
         {/* Right: Map */}
-        <div className="w-full md:w-[60%] h-[50vh] md:h-auto overflow-hidden">
+        <div className="w-full md:w-[58%] h-[50vh] md:h-auto overflow-hidden">
           <CurrentMap2 route={route} drivers={drivers} />
         </div>
       </div>
