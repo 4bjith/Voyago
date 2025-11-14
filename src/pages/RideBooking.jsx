@@ -18,7 +18,7 @@ export default function RideBooking({ socketRef }) {
   const [distance, setDistance] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [coords, setCoords] = useState(null); // ✅ store geolocation here
-
+  const [open, setOpen] = useState("")
   const token = UserStore((state) => state.token);
 
   // ✅ Calculate distance (Haversine formula)
@@ -161,7 +161,7 @@ export default function RideBooking({ socketRef }) {
     }
   }, [nearbyData]);
 
-  console.log("Drivers:", drivers);
+  // console.log("Drivers:", drivers);
 
   return (
     <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
@@ -215,9 +215,12 @@ export default function RideBooking({ socketRef }) {
             fetchPlaces={fetchPlaces}
             showRoute={showRoute}
             distance={distance}
+            setOpen={setOpen}
           />
 
-         <div className=" w-full h-auto mt-8 ">
+         <div className="">
+          {
+          open === "nearbyDrivers" && (<div className=" w-full h-auto mt-8 ">
            {drivers
            .filter((d)=> d.status === "online")
            .map((items) => ( 
@@ -227,17 +230,23 @@ export default function RideBooking({ socketRef }) {
               profile={items.profileImg}
               vehicle={items.vehicle}
               licence={items.licence}
+              setOpen={setOpen}
             />
           ))}
+         </div>)
+         }
          </div>
          <div className="">
-          <RideForm />
+          {
+            open === "rideForm" && (<RideForm />)
+          }
+          
          </div>
         </div>
 
         {/* Right: Map */}
         <div className="w-full md:w-[58%] h-[50vh] md:h-auto overflow-hidden">
-          <CurrentMap2 route={route} drivers={drivers} />
+          <CurrentMap2 route={route} drivers={drivers} pickupLocation={pickupRef?.current?.location} dropoffLocation={dropoffRef?.current?.location} />
         </div>
       </div>
     </div>

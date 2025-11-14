@@ -23,7 +23,7 @@ export default function DriverCards(props) {
         <p className="text-gray-600 text-sm">Mobile No. {props.mobile}</p>
         <p className="text-gray-600 text-sm">Vehicle No.{props.vehicle}</p>
         <p className="text-gray-600 text-sm">Licence No.{props.licence}</p>
-        <button className=" px-4 py-1 bg-gray-700 text-white rounded-lg cursor-pointer ">book</button>
+        <button onClick={()=>{props.setOpen("rideForm")}} className=" px-4 py-1 bg-gray-700 text-white rounded-lg cursor-pointer ">book</button>
       </div>
       
     </div>

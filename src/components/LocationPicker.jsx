@@ -11,8 +11,10 @@ export default function LocationPicker({
   fetchPlaces,
   showRoute,
   distance,
+  setOpen,
 }) {
   const handleBookRide = () => {
+    setOpen("nearbyDrivers")
     console.log("pickup cord",pickupRef.current.location.lat)
     toast(`Ride booked! (Demo) ${pickupRef.current.value}`);
   };
