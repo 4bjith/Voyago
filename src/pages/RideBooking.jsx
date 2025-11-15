@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import UserStore from "../zustand/UserStore";
-import NavMenu from "../components/NavMenu";
+import Navbar from "../components/Navbar";
 import LocationPicker from "../components/LocationPicker";
 import { toast } from "react-toastify";
 import CurrentMap2 from "../components/CurrentMap2";
@@ -10,7 +10,6 @@ import DriverCards from "../components/DriverCards";
 import RideForm from "../components/RideForm";
 
 export default function RideBooking({ socketRef }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const pickupRef = useRef();
   const dropoffRef = useRef();
   const [suggestion, setSuggestion] = useState([]);
@@ -18,8 +17,9 @@ export default function RideBooking({ socketRef }) {
   const [distance, setDistance] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [coords, setCoords] = useState(null); // ✅ store geolocation here
-  const [open, setOpen] = useState("")
+  const [open, setOpen] = useState("");
   const token = UserStore((state) => state.token);
+  const [driverInfo, setDriverInfo] = useState(null);
 
   // ✅ Calculate distance (Haversine formula)
   const calculateDistance = (coord1, coord2) => {
@@ -100,6 +100,7 @@ export default function RideBooking({ socketRef }) {
 
   // ✅ Fetch suggestions
   const fetchPlaces = async (query, type) => {
+    if (query.length < 3) return; // Only fetch if query has at least 3 characters
     if (!query.trim()) return;
     try {
       const res = await fetch(
@@ -144,10 +145,11 @@ export default function RideBooking({ socketRef }) {
     isLoading: loadingDrivers,
     error: driverError,
   } = useQuery({
-    queryKey: ["nearbyDrivers", coords],
+    queryKey: ["nearbyDrivers", pickupRef.current?.location],
     queryFn: async () => {
+      const pickupLocation = pickupRef.current?.location;
       const res = await api.get(
-        `/nearby?lat=${coords.latitude}&lng=${coords.longitude}`
+        `/nearby?lat=${pickupLocation.lat}&lng=${pickupLocation.lng}`
       );
       return res.data;
     },
@@ -166,42 +168,7 @@ export default function RideBooking({ socketRef }) {
   return (
     <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
       {/* Navbar */}
-      <div className="w-full bg-black text-white flex justify-between items-center px-5 py-4 relative z-50">
-        <div className="font-semibold tracking-wider text-xl">Voyago</div>
-
-        <div className="hidden md:flex md:w-[40%] md:justify-end">
-          <NavMenu />
-        </div>
-
-        {/* Hamburger */}
-        <div
-          className="flex flex-col items-end space-y-1.5 cursor-pointer md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span
-            className={`h-0.5 bg-white w-6 rounded transition-all duration-300 ${
-              menuOpen ? "rotate-45 translate-y-2" : ""
-            }`}
-          ></span>
-          <span
-            className={`h-0.5 bg-white w-4 rounded transition-all duration-300 ${
-              menuOpen ? "opacity-0" : ""
-            }`}
-          ></span>
-          <span
-            className={`h-0.5 bg-white w-6 rounded transition-all duration-300 ${
-              menuOpen ? "-rotate-45 -translate-y-2" : ""
-            }`}
-          ></span>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="absolute top-[60px] left-0 w-full bg-black flex flex-col items-center py-5 z-50 md:hidden">
-          <NavMenu />
-        </div>
-      )}
+      <Navbar />
 
       {/* Main Layout */}
       <div className="flex flex-col-reverse md:flex-row grow overflow-hidden">
@@ -218,35 +185,44 @@ export default function RideBooking({ socketRef }) {
             setOpen={setOpen}
           />
 
-         <div className="">
-          {
-          open === "nearbyDrivers" && (<div className=" w-full h-auto mt-8 ">
-           {drivers
-           .filter((d)=> d.status === "online")
-           .map((items) => ( 
-            <DriverCards
-              name={items.name}
-              mobile={items.mobile}
-              profile={items.profileImg}
-              vehicle={items.vehicle}
-              licence={items.licence}
-              setOpen={setOpen}
-            />
-          ))}
-         </div>)
-         }
-         </div>
-         <div className="">
-          {
-            open === "rideForm" && (<RideForm />)
-          }
-          
-         </div>
+          <div className="">
+            <div className=" w-full h-auto mt-8 ">
+              {drivers
+                .filter((d) => d.status === "online")
+                .map((items) => (
+                  <DriverCards
+                    name={items.name}
+                    mobile={items.mobile}
+                    profile={items.profileImg}
+                    vehicle={items.vehicle}
+                    licence={items.licence}
+                    setOpen={setOpen}
+                    setDriverInfo={setDriverInfo}
+                  />
+                ))}
+            </div>
+          </div>
+          <div className="w-full flex justify-start mt-6">
+            {open === "rideForm" && (
+              <RideForm
+                driverInfo={driverInfo}
+                socketRef={socketRef}
+                setOpen={setOpen}
+                pickupRef={pickupRef}
+                dropoffRef={dropoffRef}
+              />
+            )}
+          </div>
         </div>
 
         {/* Right: Map */}
         <div className="w-full md:w-[58%] h-[50vh] md:h-auto overflow-hidden">
-          <CurrentMap2 route={route} drivers={drivers} pickupLocation={pickupRef?.current?.location} dropoffLocation={dropoffRef?.current?.location} />
+          <CurrentMap2
+            route={route}
+            drivers={drivers}
+            pickupLocation={pickupRef?.current?.location}
+            dropoffLocation={dropoffRef?.current?.location}
+          />
         </div>
       </div>
     </div>

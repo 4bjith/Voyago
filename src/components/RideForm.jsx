@@ -3,13 +3,13 @@ import DatePicker from "react-datepicker";
 import { FaCalendarAlt, FaClock } from "react-icons/fa";
 import "react-datepicker/dist/react-datepicker.css";
 
-export default function RideForm() {
+export default function RideForm(props) {
     const [date, setDate] = useState(null);
     const [time, setTime] = useState(null);
 
     return (
         <>
-            <div className="w-full h-auto flex justify-center mt-6">
+            <div className="w-full h-auto flex justify-start mt-6">
                 <form className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 space-y-5 border border-gray-200">
 
                     <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">
@@ -22,6 +22,9 @@ export default function RideForm() {
                         <input
                             type="text"
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={props.pickupRef.current?.value}
+                            readOnly
+                            disabled
                         />
                     </div>
 
@@ -31,6 +34,9 @@ export default function RideForm() {
                         <input
                             type="text"
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={props.dropoffRef.current?.value}
+                            readOnly
+                            disabled
                         />
                     </div>
 
@@ -40,6 +46,9 @@ export default function RideForm() {
                         <input
                             type="text"
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={props.driverInfo?.name}
+                            readOnly
+                            disabled
                         />
                     </div>
 
@@ -48,7 +57,7 @@ export default function RideForm() {
 
                         {/* Date Picker */}
                         <div className="flex flex-col w-1/2">
-                            <label className="text-gray-700 text-sm mb-1 px-[4px]">Date</label>
+                            <label className="text-gray-700 text-sm mb-1 px-1">Date</label>
                             <div className="relative">
                                 <FaCalendarAlt className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500 z-10" />
                                 <DatePicker
@@ -65,7 +74,7 @@ export default function RideForm() {
 
                         {/* Time Picker */}
                         <div className="flex flex-col w-1/2">
-                            <label className="text-gray-700 text-sm mb-1 px-[4px]">Time</label>
+                            <label className="text-gray-700 text-sm mb-1 px-1">Time</label>
                             <div className="relative">
                                 <FaClock className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500 z-10" />
                                 <DatePicker

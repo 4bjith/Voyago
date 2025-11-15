@@ -14,7 +14,7 @@ export default function LocationPicker({
   setOpen,
 }) {
   const handleBookRide = () => {
-    setOpen("nearbyDrivers")
+    
     console.log("pickup cord",pickupRef.current.location.lat)
     toast(`Ride booked! (Demo) ${pickupRef.current.value}`);
   };
@@ -80,6 +80,13 @@ export default function LocationPicker({
         </div>
       )}
 
+      {/* Distance Display */}
+      {distance && (
+        <div className="mt-6 text-lg font-medium text-gray-700 bg-gray-50 p-3 rounded-lg shadow-sm text-start">
+          Distance: {distance} km
+        </div>
+      )}
+
       {/* Buttons */}
       <div className="flex flex-wrap gap-4 mt-6">
         <button
@@ -88,20 +95,15 @@ export default function LocationPicker({
         >
           Show Route
         </button>
-        <button
+        {/* <button
           className="bg-black text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-gray-700 transition"
           onClick={handleBookRide}
         >
-          Book Ride
-        </button>
+          Show nearby Drivers
+        </button> */}
       </div>
 
-      {/* Distance Display */}
-      {distance && (
-        <div className="mt-6 text-lg font-medium text-gray-700 bg-gray-50 p-3 rounded-lg shadow-sm text-center">
-          Distance: {distance} km
-        </div>
-      )}
+      
     </div>
   );
 }

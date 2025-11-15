@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import NavMenu from "../components/NavMenu";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 import UserStore from "../zustand/UserStore";
 import CurrentMap from "../components/CurrentMap";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 // Optional utility if you plan to handle expired tokens later
 const removeTokenIfExpired = (error, removeToken) => {
@@ -14,7 +14,6 @@ const removeTokenIfExpired = (error, removeToken) => {
 };
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
     const navigate = useNavigate();
@@ -54,41 +53,7 @@ export default function Home() {
   return (
     <div className="w-full min-h-screen bg-white overflow-hidden">
       {/* Navbar */}
-      <div className="w-full h-[14%] bg-black text-white flex justify-between items-center px-5 py-3 relative z-50">
-        <div className="font-semibold tracking-wider text-xl">Voyago</div>
-
-        <div className="hidden md:flex md:w-[40%] md:justify-end">
-          <NavMenu />
-        </div>
-
-        {/* Hamburger */}
-        <div
-          className="flex flex-col items-end space-y-1.5 cursor-pointer md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span
-            className={`h-0.5 bg-white w-6 rounded transition-all duration-300 ${
-              menuOpen ? "rotate-45 translate-y-2" : ""
-            }`}
-          ></span>
-          <span
-            className={`h-0.5 bg-white w-4 rounded transition-all duration-300 ${
-              menuOpen ? "opacity-0" : ""
-            }`}
-          ></span>
-          <span
-            className={`h-0.5 bg-white w-6 rounded transition-all duration-300 ${
-              menuOpen ? "-rotate-45 -translate-y-2" : ""
-            }`}
-          ></span>
-        </div>
-      </div>
-
-      {menuOpen && (
-        <div className="absolute top-[14%] left-0 w-full bg-black flex flex-col items-center py-5 z-50 md:hidden">
-          <NavMenu />
-        </div>
-      )}
+      <Navbar />
 
       {/* Hero Section */}
       <div className="relative w-full h-[66vh] overflow-hidden">

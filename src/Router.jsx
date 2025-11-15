@@ -6,16 +6,16 @@ import Register from "./pages/Register";
 import RideBooking from "./pages/RideBooking";
 import io from "socket.io-client"
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import api from "./api/axiosClient";
-import UserStore from "./zustand/UserStore";
+
 import AccountManager from "./pages/AccountManager";
+
+const baseUrl = "https://backend-uber-model.onrender.com" //"http://localhost:8080"
 
 function Router() {
   const socketRef = useRef();
   
   useEffect(() => {
-    socketRef.current=io("http://localhost:8080",{
+    socketRef.current=io(baseUrl,{
       transports: ["websocket"],
       reconnection: true,
     })
