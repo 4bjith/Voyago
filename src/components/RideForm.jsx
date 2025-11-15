@@ -2,15 +2,47 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import { FaCalendarAlt, FaClock } from "react-icons/fa";
 import "react-datepicker/dist/react-datepicker.css";
-
+import { useQuery } from "@tanstack/react-query";
+import UserStore from "../zustand/UserStore";
+import api from "../api/axiosClient";
 export default function RideForm(props) {
     const [date, setDate] = useState(null);
     const [time, setTime] = useState(null);
+    const token = UserStore((state)=> state.token)
+
+    const { data } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      return await api.get("/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    },
+    enabled: !!token, // ✅ Only run if token exists
+  });
+
+  // console.log("usequery out put : ",data)
+  const userId = data?.data?._id;
+
+    const handleSubmit = async (e)=> {
+        e.preventDefault()
+        try {
+            const res = await api.post("/bookride", {
+                driverId: props.driverInfo?.id,
+                userId: userId,
+                pickup: props.pickupRef.current?.value,
+                dropoff: props.dropoffRef.current?.value,
+                date: date,
+                time: time
+            })
+        }catch (error) {
+            console.error("Error submitting ride form:", error);
+        }
+    }
 
     return (
         <>
             <div className="w-full h-auto flex justify-start mt-6">
-                <form className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 space-y-5 border border-gray-200">
+                <form onSubmit={handleSubmit} className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 space-y-5 border border-gray-200">
 
                     <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">
                         Book Your Ride

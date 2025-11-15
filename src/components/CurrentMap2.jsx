@@ -127,7 +127,7 @@ const CurrentMap2 = ({
     : [20.5937, 78.9629]; // Default: India center
 
   return (
-    <div className="overflow-hidden w-full ">
+    <div className="overflow-hidden w-full h-auto flex justify-center items-center">
       {center ? (
         // Leaflet map container
         <MapContainer

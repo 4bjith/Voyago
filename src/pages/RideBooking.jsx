@@ -191,6 +191,7 @@ export default function RideBooking({ socketRef }) {
                 .filter((d) => d.status === "online")
                 .map((items) => (
                   <DriverCards
+                    key={items._id}
                     name={items.name}
                     mobile={items.mobile}
                     profile={items.profileImg}
@@ -223,6 +224,7 @@ export default function RideBooking({ socketRef }) {
             pickupLocation={pickupRef?.current?.location}
             dropoffLocation={dropoffRef?.current?.location}
           />
+          fghj
         </div>
       </div>
     </div>

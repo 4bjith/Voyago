@@ -17,9 +17,10 @@ export default function NavMenu() {
             Ride
           </div>
         </Link>
+        <Link to={"/account"}>
         <div className="hover:font-bold hover:border-b-2 border-white cursor-pointer">
           Account
-        </div>
+        </div></Link>
         {token ? (
           <div className="hover:font-bold hover:border-b-2 border-white cursor-pointer">
             Log out
