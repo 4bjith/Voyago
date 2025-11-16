@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 import DriverCards from "../components/DriverCards";
 import RideForm from "../components/RideForm";
+import Timer from "../components/Timer";
 
 export default function RideBooking({ socketRef }) {
   const pickupRef = useRef();
@@ -18,8 +19,10 @@ export default function RideBooking({ socketRef }) {
   const [drivers, setDrivers] = useState([]);
   const [coords, setCoords] = useState(null); // ✅ store geolocation here
   const [open, setOpen] = useState("");
+  const [select, setSelect] = useState("");
   const token = UserStore((state) => state.token);
   const [driverInfo, setDriverInfo] = useState(null);
+  const [rideId, setRideId] = useState(null);
 
   // ✅ Calculate distance (Haversine formula)
   const calculateDistance = (coord1, coord2) => {
@@ -170,6 +173,12 @@ export default function RideBooking({ socketRef }) {
       {/* Navbar */}
       <Navbar />
 
+      {select === "timer" && (
+        <div className="w-full flex justify-center my-4 absolute top-16 z-30">
+          <Timer setSelect={setSelect} rideId={rideId} />
+        </div>
+      )}
+
       {/* Main Layout */}
       <div className="flex flex-col-reverse md:flex-row grow overflow-hidden">
         {/* Left: Location Picker */}
@@ -192,6 +201,7 @@ export default function RideBooking({ socketRef }) {
                 .map((items) => (
                   <DriverCards
                     key={items._id}
+                    id={items._id}
                     name={items.name}
                     mobile={items.mobile}
                     profile={items.profileImg}
@@ -199,6 +209,7 @@ export default function RideBooking({ socketRef }) {
                     licence={items.licence}
                     setOpen={setOpen}
                     setDriverInfo={setDriverInfo}
+                    setSelect={setSelect}
                   />
                 ))}
             </div>
@@ -211,6 +222,8 @@ export default function RideBooking({ socketRef }) {
                 setOpen={setOpen}
                 pickupRef={pickupRef}
                 dropoffRef={dropoffRef}
+                setRideId={setRideId}
+                setSelect={setSelect}
               />
             )}
           </div>
@@ -224,7 +237,9 @@ export default function RideBooking({ socketRef }) {
             pickupLocation={pickupRef?.current?.location}
             dropoffLocation={dropoffRef?.current?.location}
           />
-          fghj
+          {/* <div className="w-full flex justify-center">
+            {rideId && <Timer rideId={rideId} />}
+          </div> */}
         </div>
       </div>
     </div>

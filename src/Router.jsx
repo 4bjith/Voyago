@@ -8,14 +8,16 @@ import io from "socket.io-client"
 import { useEffect, useRef, useState } from "react";
 
 import AccountManager from "./pages/AccountManager";
+import CurrentRide from "./pages/CurrentRide";
 
-const baseUrl = "https://backend-uber-model.onrender.com" //"http://localhost:8080"
+const baseUrl = "https://backend-uber-model.onrender.com";
+const baseUrl2 = "http://localhost:8080"
 
 function Router() {
   const socketRef = useRef();
   
   useEffect(() => {
-    socketRef.current=io(baseUrl,{
+    socketRef.current=io(baseUrl2,{
       transports: ["websocket"],
       reconnection: true,
     })
@@ -37,6 +39,7 @@ function Router() {
           <Route path="/register" element={<Register />} />
           <Route path="/bookride" element={<RideBooking socketRef={socketRef}  />}/>
           <Route path="/account" element={<AccountManager />} />
+          <Route path="/currentride" element={<CurrentRide socketRef={socketRef} />} />
         </Routes>
 
         <ToastContainer
