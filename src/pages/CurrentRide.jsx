@@ -198,6 +198,11 @@ export default function CurrentRide({ socketRef }) {
               opacity={0.7} />
         )}
       </MapContainer>
+      <div className="w-100vw h-20 flex justify-evenly items-center bg-green-950 text-orange-700">
+        <p>Otp : </p>
+        <p>Distance: </p>
+        <p>Driver Name: </p>
+      </div>
     </div>
   );
 }
