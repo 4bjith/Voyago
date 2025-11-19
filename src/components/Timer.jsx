@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../api/axiosClient";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 export default function Timer({ setSelect, rideId }) {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(true);
   const duration = 30;
+  const navigate = useNavigate();
 
   console.log(rideId)
   const rideStatus = useCallback(async () => {
@@ -20,6 +22,7 @@ export default function Timer({ setSelect, rideId }) {
         setRunning(false);
         toast.success("Your ride has been accepted!");
         setSelect("");
+        navigate("/currentride");
       }
     } catch (error) {
       console.error("Error fetching ride status:", error);

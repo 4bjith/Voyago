@@ -56,6 +56,18 @@ export default function Login() {
     );
   };
 
+
+  // keydown enter to submit
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      if (!emailRef.current?.value || !passwordRef.current?.value) {
+        toast.error("Please enter both email and password.");
+        return;
+      }
+      loginSubmit();
+    }
+  };
+
   return (
     <div className="w-screen h-screen bg-black flex items-center justify-center">
       <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center">
@@ -79,6 +91,7 @@ export default function Login() {
               id="email"
               ref={emailRef}
               placeholder="Enter email .."
+              onKeyDown={handleKeyDown}
               className="w-full px-4 py-3 rounded-lg bg-white bg-opacity-20 text-black placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-white mb-3 border border-gray-300"
             />
             <div className="w-full relative mb-3">
@@ -89,6 +102,7 @@ export default function Login() {
                 ref={passwordRef}
                 placeholder="Enter password"
                 className="w-full px-4 py-3 rounded-lg bg-white bg-opacity-20 text-black placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-white border border-gray-300"
+                onKeyDown={handleKeyDown}
               />
               <button
                 type="button"

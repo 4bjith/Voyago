@@ -1,5 +1,6 @@
 import { useState } from "react";
 import NavMenu from "./NavMenu";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -7,7 +8,7 @@ const Navbar = () => {
   return (
     <>
       <div className="w-full bg-black text-white flex justify-between items-center px-5 py-4 relative z-50">
-        <div className="font-semibold tracking-wider text-xl">Voyago</div>
+        <div className="font-semibold tracking-wider text-xl"><Link to="/">Voyago</Link></div>
 
         <div className="hidden md:flex md:w-[40%] md:justify-end">
           <NavMenu />

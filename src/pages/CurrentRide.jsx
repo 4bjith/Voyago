@@ -8,23 +8,16 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
+// Default marker icon fix
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import { toast } from "react-toastify";
 const defaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
 L.Marker.prototype.options.icon = defaultIcon;
 
-// 🚗 Driver icon
-const carIcon = new L.Icon({
-  iconUrl:
-    "https://images.vexels.com/media/users/3/127711/isolated/preview/384e0b3361d99d9c370b4037115324b9-flat-vintage-car-icon.png",
-  iconSize: [35, 35],
-  iconAnchor: [25, 55],
-});
-
-// 🧍 User icon
+// Icons
 const userIcon = new L.Icon({
   iconUrl:
     "https://www.nicepng.com/png/full/128-1280406_view-user-icon-png-user-circle-icon-png.png",
@@ -32,17 +25,14 @@ const userIcon = new L.Icon({
   iconAnchor: [10, 10],
 });
 
-// ✅ Auto-center component
-function MapAutoCenter({ location }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!location) return;
-    map.setView([location.lat, location.lng], 15, { animate: true });
-  }, [location, map]);
-  return null;
-}
+const carIcon = new L.Icon({
+  iconUrl:
+    "https://images.vexels.com/media/users/3/127711/isolated/preview/384e0b3361d99d9c370b4037115324b9-flat-vintage-car-icon.png",
+  iconSize: [35, 35],
+  iconAnchor: [25, 55],
+});
 
-// 🟦 Fit bounds (User + Driver)
+// FitBounds component
 function FitBounds({ points }) {
   const map = useMap();
 
@@ -65,141 +55,108 @@ function FitBounds({ points }) {
 export default function CurrentRide({ socketRef }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [driverLocation, setDriverLocation] = useState(null);
-  const [error, setError] = useState("");
   const [route, setRoute] = useState([]);
 
-  // 🌍 Fetching user current location
+  // Get user's live location
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation not supported by your browser.");
-      return;
-    }
+    if (!navigator.geolocation) return;
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        setCurrentLocation({
+        const coords = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
-        });
+        };
+        setCurrentLocation(coords);
+
+        console.log("User location: ", currentLocation);
+        // Send user location to server
+        if (socketRef.current) {
+          socketRef.current.emit("user:location:update", {
+            coordinates: coords,
+          });
+        }
       },
-      (err) => setError(err.message),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      (err) => console.error(err),
+      { enableHighAccuracy: true }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // 🚗 Receive driver location via socket
+  // Receive driver live location
   useEffect(() => {
     if (!socketRef.current) return;
 
-    // Event from general driver updates
     socketRef.current.on("driver:location", (location) => {
-      console.log("General driver location:", location);
-      setDriverLocation(location);
-    });
-
-    // Event from ride page updates
-    socketRef.current.on("driver:location:currentride", (location) => {
-      console.log("Ridepage driver location:", location);
       setDriverLocation(location);
     });
   }, []);
 
-  // console.log("Current Location:", currentLocation);
-  // console.log("Driver Location:", driverLocation);
-  const center = currentLocation
-    ? [currentLocation.lat, currentLocation.lng]
-    : [20.5937, 78.9629];
+  // Compute route between user & driver
+  const getRoute = async () => {
+    if (!currentLocation || !driverLocation) return;
 
-  // 📌 Points for FitBounds
-  const pointsForFit = [currentLocation, driverLocation].filter(Boolean);
-
-  // show route
-  const showRoute = async () => {
-    const userLocation = currentLocation;
-    const driverLoc = driverLocation;
-
-    if (!userLocation || !driverLoc) {
-      toast.error("User or Driver location is missing.");
-      return;
-    }
     try {
-      const apiKey =
-        "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2OTg1ZDk4ZjVkNTQxMWU5OTAzZjVmMGNjMjZlYWIxIiwiaCI6Im11cm11cjY0In0=";
-      const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${userLocation.lng},${userLocation.lat}&end=${driverLoc.lng},${driverLoc.lat}&geometries=geojson`;
+      const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2OTg1ZDk4ZjVkNTQxMWU5OTAzZjVmMGNjMjZlYWIxIiwiaCI6Im11cm11cjY0In0=";
+      const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${driverLocation.lng},${driverLocation.lat}&end=${currentLocation.lng},${currentLocation.lat}&geometries=geojson`;
+
       const res = await fetch(url);
       const data = await res.json();
 
-      if (!data.features) {
-        toast.error("No route found");
-        return;
-      }
+      if (!data.features) return;
+
       const coords = data.features[0].geometry.coordinates.map((c) => ({
         lat: c[1],
         lng: c[0],
       }));
 
       setRoute(coords);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to fetch route. Please try again.");
+    } catch (e) {
+      console.error(e);
+      toast.error("Route fetch failed");
     }
   };
 
   useEffect(() => {
-    if (currentLocation && driverLocation) {
-      showRoute();
-    }
+    getRoute();
   }, [currentLocation, driverLocation]);
 
+  const center = currentLocation
+    ? [currentLocation.lat, currentLocation.lng]
+    : [20.5937, 78.9629];
+
   return (
-    <div className="w-screen h-80vh flex flex-col overflow-x-hidden bg-gray-50">
+    <div className="w-screen h-80vh flex flex-col bg-gray-50">
       <MapContainer
         center={center}
         zoom={15}
         scrollWheelZoom={true}
         style={{ height: "80vh", width: "100vw" }}
       >
-        <TileLayer
-          attribution="&copy; OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* Auto-center user only */}
-        {/* <MapAutoCenter location={currentLocation} /> */}
+        <FitBounds points={[currentLocation, driverLocation].filter(Boolean)} />
 
-        {/* Auto-fit user + driver */}
-        <FitBounds points={pointsForFit} />
-
-        {/* 🧍 User Marker */}
         {currentLocation && (
-          <Marker
-            position={[currentLocation.lat, currentLocation.lng]}
-            icon={userIcon}
-          >
-            <Popup>Your Current Location</Popup>
+          <Marker position={[currentLocation.lat, currentLocation.lng]} icon={userIcon}>
+            <Popup>You</Popup>
           </Marker>
         )}
 
-        {/* 🚗 Driver Marker */}
         {driverLocation && (
-          <Marker
-            position={[driverLocation.lat, driverLocation.lng]}
-            icon={carIcon}
-          >
-            <Popup>Driver's Current Location</Popup>
+          <Marker position={[driverLocation.lat, driverLocation.lng]} icon={carIcon}>
+            <Popup>Driver</Popup>
           </Marker>
         )}
 
-        {/* 🛣 Route Line (User ↔ Driver) */}
-        {route && route.length > 0 && (
-          <Polyline positions={route} color="blue"weight={5}
-              opacity={0.7} />
+        {route.length > 0 && (
+          <Polyline positions={route} color="blue" weight={5} opacity={0.7} />
         )}
       </MapContainer>
-      <div className="w-100vw h-20 flex justify-evenly items-center bg-green-950 text-orange-700">
-        <p>Otp : </p>
+
+      <div className="h-20 flex justify-evenly items-center bg-green-900 text-yellow-400">
+        <p>OTP: </p>
         <p>Distance: </p>
         <p>Driver Name: </p>
       </div>

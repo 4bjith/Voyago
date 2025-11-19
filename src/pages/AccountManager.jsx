@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import InfoCard from "../components/InfoCard";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function AccountManager() {
   const [active, setActive] = useState("profile");
@@ -39,6 +40,9 @@ function AccountManager() {
               {active === "history" && <h1> history</h1>}
             </div>
           </div>
+        </div>
+        <div className="w-full">
+          <Footer />
         </div>
       </div>
     </>

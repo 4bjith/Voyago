@@ -9,6 +9,7 @@ import api from "../api/axiosClient";
 import DriverCards from "../components/DriverCards";
 import RideForm from "../components/RideForm";
 import Timer from "../components/Timer";
+import Footer from "../components/Footer";
 
 export default function RideBooking({ socketRef }) {
   const pickupRef = useRef();
@@ -174,7 +175,7 @@ export default function RideBooking({ socketRef }) {
       <Navbar />
 
       {select === "timer" && (
-        <div className="w-full flex justify-center my-4 absolute top-16 z-30">
+        <div className="w-full flex justify-center my-4 absolute top-16 z-30 bg-gray-50 opacity-50">
           <Timer setSelect={setSelect} rideId={rideId} />
         </div>
       )}
@@ -242,6 +243,7 @@ export default function RideBooking({ socketRef }) {
           </div> */}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
