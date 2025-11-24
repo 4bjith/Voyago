@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 
 import AccountManager from "./pages/AccountManager";
 import CurrentRide from "./pages/CurrentRide";
+import FinalRide from "./pages/FinalRide";
 
 const baseUrl = "https://backend-uber-model.onrender.com";
 const baseUrl2 = "http://localhost:8080"
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/bookride" element={<RideBooking socketRef={socketRef}  />}/>
           <Route path="/account" element={<AccountManager />} />
           <Route path="/currentride" element={<CurrentRide socketRef={socketRef} />} />
+          <Route path="/finalride" element={<FinalRide socketRef={socketRef} />} />
         </Routes>
 
         <ToastContainer

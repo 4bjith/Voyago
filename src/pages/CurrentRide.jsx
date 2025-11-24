@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 
@@ -63,6 +63,8 @@ export default function CurrentRide({ socketRef }) {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const rideId = queryParams.get("rideid");
+
+  const navigate = useNavigate();
 
   // Live user location
   useEffect(() => {
@@ -146,6 +148,16 @@ export default function CurrentRide({ socketRef }) {
     },
     enabled: !!rideId,
   });
+
+  useEffect(() => { 
+    socketRef.current?.on("ride:status", (data) => {
+      const {  status } = data;
+      if(status === "in_progress"){
+        // navigate to final ride page
+        navigate(`/finalride?id=${rideId}`);
+      }
+    });
+  }, [rideId, socketRef, currentLocation]);
 
   return (
     <div className="w-screen h-80vh flex flex-col bg-gray-50">
