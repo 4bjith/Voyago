@@ -31,6 +31,8 @@ export default function RideForm(props) {
         userId: userId,
         pickup: props.pickupRef.current?.value,
         dropoff: props.dropoffRef.current?.value,
+        pickupCoordinates: [props.pickupRef.current.location.lat, props.pickupRef.current.location.lng],
+        dropoffCoordinates: [props.dropoffRef.current.location.lat, props.dropoffRef.current.location.lng],
         date: date,
         time: time,
       });
@@ -43,6 +45,8 @@ export default function RideForm(props) {
       console.error("Error submitting ride form:", error);
     }
   };
+  // console.log("pickup coords:", props.pickupRef.current.location.lat);
+  // console.log("dropoff coords:", props.dropoffRef.current.location.lat);
 
   return (
     <>

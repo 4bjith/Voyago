@@ -11,9 +11,12 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-// Default marker icon fix
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import api from "../api/axiosClient";
+
 const defaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
 L.Marker.prototype.options.icon = defaultIcon;
 
@@ -32,19 +35,19 @@ const carIcon = new L.Icon({
   iconAnchor: [25, 55],
 });
 
-// FitBounds component
+// FitBounds
 function FitBounds({ points }) {
   const map = useMap();
 
   useEffect(() => {
     if (!points.length) return;
 
-    const validPoints = points
+    const valid = points
       .filter((p) => p?.lat && p?.lng)
       .map((p) => [p.lat, p.lng]);
 
-    if (validPoints.length >= 2) {
-      const bounds = L.latLngBounds(validPoints);
+    if (valid.length >= 2) {
+      const bounds = L.latLngBounds(valid);
       map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [points, map]);
@@ -57,7 +60,11 @@ export default function CurrentRide({ socketRef }) {
   const [driverLocation, setDriverLocation] = useState(null);
   const [route, setRoute] = useState([]);
 
-  // Get user's live location
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const rideId = queryParams.get("rideid");
+
+  // Live user location
   useEffect(() => {
     if (!navigator.geolocation) return;
 
@@ -67,10 +74,9 @@ export default function CurrentRide({ socketRef }) {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         };
+
         setCurrentLocation(coords);
 
-        console.log("User location: ", currentLocation);
-        // Send user location to server
         if (socketRef.current) {
           socketRef.current.emit("user:location:update", {
             coordinates: coords,
@@ -84,21 +90,23 @@ export default function CurrentRide({ socketRef }) {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // Receive driver live location
+  // Driver location from socket
   useEffect(() => {
     if (!socketRef.current) return;
 
-    socketRef.current.on("driver:location", (location) => {
-      setDriverLocation(location);
+    socketRef.current.on("driver:location", (loc) => {
+      setDriverLocation(loc);
     });
   }, []);
 
-  // Compute route between user & driver
+  // Fetch route
   const getRoute = async () => {
     if (!currentLocation || !driverLocation) return;
 
     try {
-      const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2OTg1ZDk4ZjVkNTQxMWU5OTAzZjVmMGNjMjZlYWIxIiwiaCI6Im11cm11cjY0In0=";
+      const apiKey =
+        "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2OTg1ZDk4ZjVkNTQxMWU5OTAzZjVmMGNjMjZlYWIxIiwiaCI6Im11cm11cjY0In0=";
+
       const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${driverLocation.lng},${driverLocation.lat}&end=${currentLocation.lng},${currentLocation.lat}&geometries=geojson`;
 
       const res = await fetch(url);
@@ -126,6 +134,19 @@ export default function CurrentRide({ socketRef }) {
     ? [currentLocation.lat, currentLocation.lng]
     : [20.5937, 78.9629];
 
+  // 🔥 FIXED REACT QUERY
+  const { data: rideInfo } = useQuery({
+    queryKey: ["ridedetails", rideId],
+    queryFn: async () => {
+      const res = await api.get("/ride/info", {
+        params: { rideId },
+      });
+
+      return res.data.data; // backend returns { message, data }
+    },
+    enabled: !!rideId,
+  });
+
   return (
     <div className="w-screen h-80vh flex flex-col bg-gray-50">
       <MapContainer
@@ -136,16 +157,24 @@ export default function CurrentRide({ socketRef }) {
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        <FitBounds points={[currentLocation, driverLocation].filter(Boolean)} />
+        <FitBounds
+          points={[currentLocation, driverLocation].filter(Boolean)}
+        />
 
         {currentLocation && (
-          <Marker position={[currentLocation.lat, currentLocation.lng]} icon={userIcon}>
+          <Marker
+            position={[currentLocation.lat, currentLocation.lng]}
+            icon={userIcon}
+          >
             <Popup>You</Popup>
           </Marker>
         )}
 
         {driverLocation && (
-          <Marker position={[driverLocation.lat, driverLocation.lng]} icon={carIcon}>
+          <Marker
+            position={[driverLocation.lat, driverLocation.lng]}
+            icon={carIcon}
+          >
             <Popup>Driver</Popup>
           </Marker>
         )}
@@ -156,9 +185,9 @@ export default function CurrentRide({ socketRef }) {
       </MapContainer>
 
       <div className="h-20 flex justify-evenly items-center bg-green-900 text-yellow-400">
-        <p>OTP: </p>
-        <p>Distance: </p>
-        <p>Driver Name: </p>
+        <p>OTP: {rideInfo?.otp ?? "..."}</p>
+        <p>Distance: {rideInfo?.distance ?? "..."} km</p>
+        <p>Driver Name: {rideInfo?.driver?.name ?? "..."}</p>
       </div>
     </div>
   );

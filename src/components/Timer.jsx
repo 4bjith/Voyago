@@ -22,7 +22,7 @@ export default function Timer({ setSelect, rideId }) {
         setRunning(false);
         toast.success("Your ride has been accepted!");
         setSelect("");
-        navigate("/currentride");
+        navigate(`/currentride?rideid=${rideId}`);
       }
     } catch (error) {
       console.error("Error fetching ride status:", error);
