@@ -10,8 +10,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {  useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useLocation } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom"
 
 // Default marker icons
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -54,6 +53,7 @@ export default function FinalRide({socketRef}) {
     const [route, setRoute] = useState([]);
     const location = useLocation();
     const rideId = new URLSearchParams(location.search).get("id");
+    const navigate = useNavigate();
     
 
     socketRef.current?.on("ride:started", (data) => {
@@ -105,6 +105,18 @@ export default function FinalRide({socketRef}) {
     console.log("Ride Ended",distance);
   };
 
+  useEffect(() => {
+  socketRef.current?.on("ride:end", (data) => {
+    if (data.status === "completed") {
+      toast.success("Ride completed! Thank you for using Voyago.");
+      navigate("/");
+    }
+  });
+
+  return () => {
+    socketRef.current?.off("ride:end");
+  };
+}, []);
   
   return (<>
     <div className="w-full h-screen relative">
