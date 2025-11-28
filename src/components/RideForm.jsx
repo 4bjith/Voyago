@@ -35,6 +35,7 @@ export default function RideForm(props) {
         dropoffCoordinates: [props.dropoffRef.current.location.lat, props.dropoffRef.current.location.lng],
         date: date,
         time: time,
+        distance: props.distance,
       });
       if (res.data && res.data.rideId) {
         props.setRideId(res.data.rideId);

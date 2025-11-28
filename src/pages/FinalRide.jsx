@@ -130,7 +130,7 @@ export default function FinalRide({socketRef}) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        {/* <FitBounds points={[currentLocation, destination].filter(Boolean)} /> */}
+        <FitBounds points={[currentLocation, destination].filter(Boolean)} />
         {currentLocation && (
           <Marker position={[currentLocation.lat, currentLocation.lng]} icon={carIcon}>
             <Popup>Your Current Location</Popup>
