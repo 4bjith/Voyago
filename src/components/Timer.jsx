@@ -13,12 +13,10 @@ export default function Timer({ setSelect, rideId }) {
   const rideStatus = useCallback(async () => {
     try {
       const res = await api.get("/ride/status", {
-         params: { rideId: rideId },
+        params: { rideId: rideId },
       });
       const data = res.data;
-    //   console.log("Ride status data: ", data);
-      // TODO: Do something with the ride status data
-      if(data.data?.status==="accepted" ){
+      if (data.data?.status === "accepted") {
         setRunning(false);
         toast.success("Your ride has been accepted!");
         setSelect("");
@@ -48,7 +46,7 @@ export default function Timer({ setSelect, rideId }) {
     return () => clearInterval(interval);
   }, [running, rideStatus]);
 
-   const handleReset = () => {
+  const handleReset = () => {
     setRunning(false);
     setSeconds(0);
     setSelect("");
@@ -64,49 +62,62 @@ export default function Timer({ setSelect, rideId }) {
   };
 
   return (
-    <div className={`${!running ?"-z-10" : "z-30"}  flex flex-col items-center justify-center bg-linear-to-b from-slate-50 to-slate-200 p-6`}>
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md border border-slate-200 text-center">
-        {/* Timer Display */}
-        <div className="text-6xl font-bold text-slate-800 mb-6">
-          {formatTime(seconds)}
+    <div
+      className={`${!running ? "pointer-events-none opacity-0" : "opacity-100 z-50"
+        } fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300`}
+    >
+      <div className="bg-white shadow-2xl rounded-3xl p-8 w-[90%] max-w-sm flex flex-col items-center relative animate-in fade-in zoom-in duration-300">
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">
+          Finding your ride...
+        </h2>
+
+        {/* Circular Timer Visual */}
+        <div className="relative w-40 h-40 flex items-center justify-center mb-6">
+          <svg className="w-full h-full transform -rotate-90">
+            <circle
+              cx="80"
+              cy="80"
+              r="70"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="transparent"
+              className="text-gray-200"
+            />
+            <circle
+              cx="80"
+              cy="80"
+              r="70"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="transparent"
+              strokeDasharray={440}
+              strokeDashoffset={440 - (440 * seconds) / duration}
+              className="text-black transition-all duration-1000 ease-linear"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-4xl font-bold text-gray-900 tabular-nums">
+              {formatTime(seconds)}
+            </span>
+          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-200 rounded-full h-3 mb-6">
-          <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${(seconds / duration) * 100}%` }}
-          ></div>
-        </div>
-
-        {/* Status */}
-        <div className="text-sm text-slate-600 mb-4">
+        {/* Status Text */}
+        <p className="text-gray-500 text-center mb-8 text-sm px-4">
           {running
-            ? "Timer is running..."
+            ? "Contacting nearby drivers..."
             : seconds >= duration
-            ? "Time's up!"
-            : "Timer stopped."}
-        </div>
+              ? "Taking longer than expected..."
+              : "Search paused."}
+        </p>
 
         {/* Controls */}
-        <div className="flex justify-center gap-3 mt-4">
-          <button
-            onClick={() => setRunning((prev) => !prev)}
-            className={`px-5 py-2 rounded-xl font-medium transition active:scale-95 ${
-              running
-                ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
-          >
-            {running ? "Pause" : "Resume"}
-          </button>
-        </div>
-        <div className="flex justify-center gap-3 mt-4">
+        <div className="flex gap-4 w-full">
           <button
             onClick={handleReset}
-            className="px-5 py-2 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
+            className="flex-1 py-3 rounded-xl font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
           >
-            Reset
+            Cancel Request
           </button>
         </div>
       </div>

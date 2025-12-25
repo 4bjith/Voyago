@@ -10,24 +10,26 @@ import { useEffect, useRef, useState } from "react";
 import AccountManager from "./pages/AccountManager";
 import CurrentRide from "./pages/CurrentRide";
 import FinalRide from "./pages/FinalRide";
+import ProfileImgUpdateForm from "./components/ProfileImageUpdateForm";
+import RideHistory from "./pages/RideHistory";
 
 const baseUrl = "https://backend-uber-model.onrender.com";
 const baseUrl2 = "http://localhost:8080"
 
 function Router() {
   const socketRef = useRef();
-  
+
   useEffect(() => {
-    socketRef.current=io(baseUrl2,{
+    socketRef.current = io(baseUrl2, {
       transports: ["websocket"],
       reconnection: true,
     })
 
-    socketRef.current.on("connect",()=>{
-      console.log("connected to Socket.IO: ",socketRef.current.id);
+    socketRef.current.on("connect", () => {
+      console.log("connected to Socket.IO: ", socketRef.current.id);
     })
 
-    socketRef.current.on("disconnecte",()=>{
+    socketRef.current.on("disconnecte", () => {
       console.log("Disconnected from socket.IO");
     })
   }, [socketRef])
@@ -38,10 +40,12 @@ function Router() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/bookride" element={<RideBooking socketRef={socketRef}  />}/>
+          <Route path="/bookride" element={<RideBooking socketRef={socketRef} />} />
           <Route path="/account" element={<AccountManager />} />
           <Route path="/currentride" element={<CurrentRide socketRef={socketRef} />} />
           <Route path="/finalride" element={<FinalRide socketRef={socketRef} />} />
+          <Route path="/update/image" element={<ProfileImgUpdateForm />} />
+          {/* <Route path="/ride-history" element={<RideHistory />} /> */}
         </Routes>
 
         <ToastContainer

@@ -14,13 +14,13 @@ export default function LocationPicker({
   setOpen,
 }) {
   const handleBookRide = () => {
-    
-    console.log("pickup cord",pickupRef.current.location.lat)
+
+    console.log("pickup cord", pickupRef.current.location.lat)
     toast(`Ride booked! (Demo) ${pickupRef.current.value}`);
   };
 
   return (
-    <div className="w-full h-auto">
+    <div className="w-full h-auto relative">
       <h1 className="text-[1.7rem] font-semibold pt-2 mb-4">
         Go anywhere with{" "}
         <span className="font-bold tracking-wider text-[1.8rem] text-black">
@@ -67,14 +67,15 @@ export default function LocationPicker({
 
       {/* Suggestions */}
       {suggestion.length > 0 && (
-        <div className="bg-white border rounded-lg shadow-md mt-2 mb-3 max-h-48 overflow-y-auto z-10">
+        <div className="absolute left-0 right-0 top-[280px] bg-white border rounded-lg shadow-xl max-h-48 overflow-y-auto z-40 mx-2">
+          {/* Added absolute positioning and increased z-index */}
           {suggestion.map((place, idx) => (
             <div
               key={idx}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+              className="px-4 py-3 cursor-pointer hover:bg-gray-100 text-sm border-b last:border-b-0"
               onClick={() => handleSelectPlace(place)}
             >
-              {place.name}
+              <div className="font-medium text-gray-800">{place.name}</div>
             </div>
           ))}
         </div>
@@ -103,7 +104,7 @@ export default function LocationPicker({
         </button> */}
       </div>
 
-      
+
     </div>
   );
 }

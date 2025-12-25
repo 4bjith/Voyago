@@ -149,10 +149,10 @@ export default function CurrentRide({ socketRef }) {
     enabled: !!rideId,
   });
 
-  useEffect(() => { 
+  useEffect(() => {
     socketRef.current?.on("ride:status", (data) => {
-      const {  status } = data;
-      if(status === "in_progress"){
+      const { status } = data;
+      if (status === "in_progress") {
         // navigate to final ride page
         navigate(`/finalride?id=${rideId}`);
       }
@@ -160,46 +160,75 @@ export default function CurrentRide({ socketRef }) {
   }, [rideId, socketRef, currentLocation]);
 
   return (
-    <div className="w-screen h-80vh flex flex-col bg-gray-50">
-      <MapContainer
-        center={center}
-        zoom={15}
-        scrollWheelZoom={true}
-        style={{ height: "80vh", width: "100vw" }}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <div className="w-full h-screen flex flex-col relative overflow-hidden bg-gray-50">
+      {/* Map Layer */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer
+          center={center}
+          zoom={15}
+          style={{ height: "100%", width: "100%" }}
+          zoomControl={false}
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <FitBounds points={[currentLocation, driverLocation].filter(Boolean)} />
 
-        <FitBounds
-          points={[currentLocation, driverLocation].filter(Boolean)}
-        />
+          {currentLocation && (
+            <Marker position={[currentLocation.lat, currentLocation.lng]} icon={userIcon}>
+              <Popup>You</Popup>
+            </Marker>
+          )}
 
-        {currentLocation && (
-          <Marker
-            position={[currentLocation.lat, currentLocation.lng]}
-            icon={userIcon}
-          >
-            <Popup>You</Popup>
-          </Marker>
-        )}
+          {driverLocation && (
+            <Marker position={[driverLocation.lat, driverLocation.lng]} icon={carIcon}>
+              <Popup>Driver</Popup>
+            </Marker>
+          )}
 
-        {driverLocation && (
-          <Marker
-            position={[driverLocation.lat, driverLocation.lng]}
-            icon={carIcon}
-          >
-            <Popup>Driver</Popup>
-          </Marker>
-        )}
+          {route.length > 0 && (
+            <Polyline positions={route} color="black" weight={4} opacity={0.8} />
+          )}
+        </MapContainer>
+      </div>
 
-        {route.length > 0 && (
-          <Polyline positions={route} color="blue" weight={5} opacity={0.7} />
-        )}
-      </MapContainer>
+      {/* Floating Info Panel */}
+      <div className="absolute bottom-4 left-4 right-4 z-20">
+        <div className="bg-white rounded-3xl shadow-xl p-6 mb-2">
 
-      <div className="h-20 flex justify-evenly items-center bg-green-900 text-yellow-400">
-        <p>OTP: {rideInfo?.otp ?? "..."}</p>
-        <p>Distance: {rideInfo?.distance ?? "..."} km</p>
-        <p>Driver Name: {rideInfo?.driver?.name ?? "..."}</p>
+          {/* Driver Info Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                {/* Placeholder or actual driver image */}
+                <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt="Driver" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{rideInfo?.driver?.name || "Driver"}</h2>
+                <p className="text-gray-500 text-sm">★ 4.9 • {rideInfo?.driver?.vehicleName || "Sedan"}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-bold">Vehicle No</p>
+              <p className="text-lg font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded-md mt-1">{rideInfo?.driver?.vehicle || "SH-X55"}</p>
+            </div>
+          </div>
+
+          <hr className="border-gray-100 mb-6" />
+
+          {/* OTP Section */}
+          <div className="flex items-center justify-between bg-green-50 rounded-xl p-4 border border-green-100">
+            <div>
+              <p className="text-green-800 text-sm font-medium mb-1">Share this OTP with driver</p>
+              <p className="text-green-600 text-xs">To start your ride securely</p>
+            </div>
+            <div className="text-4xl font-mono font-bold text-green-700 tracking-widest">
+              {rideInfo?.otp || "...."}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-black text-white rounded-2xl p-4 text-center shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => toast.info("Sharing functionality coming soon")}>
+          Share Trip Status
+        </div>
       </div>
     </div>
   );

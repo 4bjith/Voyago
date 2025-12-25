@@ -119,15 +119,15 @@ const CurrentMap = ({
   const center = isValidLatLng(driverLocation)
     ? [driverLocation.lat, driverLocation.lng]
     : isValidLatLng(currentLocation)
-    ? [currentLocation.lat, currentLocation.lng]
-    : isValidLatLng(pickupLocation)
-    ? [pickupLocation.lat, pickupLocation.lng]
-    : isValidLatLng(dropoffLocation)
-    ? [dropoffLocation.lat, dropoffLocation.lng]
-    : [20.5937, 78.9629]; // Default: India center
+      ? [currentLocation.lat, currentLocation.lng]
+      : isValidLatLng(pickupLocation)
+        ? [pickupLocation.lat, pickupLocation.lng]
+        : isValidLatLng(dropoffLocation)
+          ? [dropoffLocation.lat, dropoffLocation.lng]
+          : [20.5937, 78.9629]; // Default: India center
 
   return (
-    <div className="overflow-hidden w-full ">
+    <div className="overflow-hidden w-full h-[600px] flex justify-center items-center">
       {center ? (
         // Leaflet map container
         <MapContainer
@@ -135,7 +135,7 @@ const CurrentMap = ({
           zoom={13}
           scrollWheelZoom={true}
           className=" rounded-2xl z-10"
-          style={{ height: "400px", width: "600px" }}
+          style={{ height: "100%", width: "100%" }}
         >
           {/*  Base map tiles from OpenStreetMap */}
           <TileLayer
