@@ -43,7 +43,11 @@ export default function AccountManager() {
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-gray-50">
+      {/* Navbar */}
+      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
       <Navbar />
+      </div>
+      <div className="h-[120px]"></div>
 
       <div className="grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row gap-6">

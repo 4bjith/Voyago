@@ -7,18 +7,57 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-// Optional utility if you plan to handle expired tokens later
-const removeTokenIfExpired = (error, removeToken) => {
-  if (error?.response?.status === 403) {
-    removeToken();
-  }
-};
+import img1 from "../assets/images/driver-vector.jpg"
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const token = UserStore(state=> state.token)
+  const setToken = UserStore(state=> state.addToken)
+  const [isHero, setIsHero] = useState(false)
 
   const navigate = useNavigate();
 
+  const {data: auth} = useQuery({
+    queryKey: ["authcheck", token],
+    queryFn: async () => {
+      const res = await api.get("/tockencheck",{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      })
+      return res.data
+    },
+  })
+
+  useEffect(()=>{
+    if(auth?.token === null){
+      setToken(null)
+    }
+  })
+
+
+  // -----------------navbar effect -------------
+ useEffect(() => {
+  const hero = document.getElementById("hero");
+  if (!hero) return;
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      setIsHero(entry.isIntersecting);
+    },
+    {
+      root: null,
+      rootMargin: "-80px 0px 0px 0px", // adjust to navbar height
+      threshold: 0,
+    }
+  );
+
+  observer.observe(hero);
+  return () => observer.disconnect();
+}, []);
+
+
+  //-------------hero slides -----------------
   const slides = [
     {
       id: 1,
@@ -43,6 +82,7 @@ export default function Home() {
     },
   ];
 
+  
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -54,10 +94,13 @@ export default function Home() {
   return (
     <div className="w-full min-h-screen bg-white overflow-hidden font-sans">
       {/* Navbar */}
-      <Navbar />
+      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
+
+      <Navbar isHero={isHero}/>
+      </div>
 
       {/* Hero Section */}
-      <div className="relative w-full h-[80vh] overflow-hidden">
+      <div id="hero" className="relative w-full h-[80vh] overflow-hidden">
         <div
           className="flex transition-transform duration-1000 ease-in-out"
           style={{
@@ -117,19 +160,32 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {/* ---------- Driver Route section ----------------- */}
+      <div className="w-full max-w-7xl mx-auto my-20 px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
+        <div className="w-full h-full min-h-[400px] flex items-center justify-center">
+          <div className="bg-gray-100 w-full h-[400px] rounded-3xl overflow-hidden relative shadow-2xl border border-gray-200">
+            <img src={img1} alt="." className="h-full overflow-hidden" />
+          </div>
+        </div>
+        <div className="space-y-8 text-center md:text-left">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black">
+            Want to be a VoyagoDriver
+          </h2>
+          <p className="text-gray-600 text-lg leading-relaxed">
+            Explore the fun of being a driver at Voyago.<br/>Visit our drivers section to Know more about the drivers wing
+          </p>
+          <a href="http://localhost:5174/" target="_blank">
+          <button className="bg-black text-white px-10 py-4 rounded-full text-lg hover:bg-gray-900 transition-all duration-300 font-medium shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+            Go to Drivers section
+          </button>
+          </a>
+        </div>
+
+      </div>
 
       {/* Account Section */}
       <div className="w-full bg-black py-20 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          <div className="order-2 md:order-1 w-full flex justify-center items-center">
-            <div className="w-full h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative">
-              <img
-                src="https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=2144/height=2144/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy8xODM0ZTZmZC0zM2UzLTRjOTUtYWQ3YS1mNDg0YThjODEyZDcuanBn"
-                alt="Account"
-                className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
-              />
-            </div>
-          </div>
 
           <div className="order-1 md:order-2 space-y-8 text-center md:text-left text-white">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -143,6 +199,16 @@ export default function Home() {
             <button onClick={() => navigate("/login")} className="bg-white text-black px-10 py-4 rounded-full text-lg hover:bg-gray-200 transition-all duration-300 font-medium shadow-xl transform hover:-translate-y-1">
               Log in to your account
             </button>
+          </div>
+
+          <div className="order-2 md:order-1 w-full flex justify-center items-center">
+            <div className="w-full h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative">
+              <img
+                src="https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=2144/height=2144/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy8xODM0ZTZmZC0zM2UzLTRjOTUtYWQ3YS1mNDg0YThjODEyZDcuanBn"
+                alt="Account"
+                className="object-cover w-full h-full  hover:grayscale transition-all duration-700"
+              />
+            </div>
           </div>
         </div>
       </div>

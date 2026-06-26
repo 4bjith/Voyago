@@ -16,6 +16,7 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
+import Navbar from "../components/Navbar";
 
 const defaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
 L.Marker.prototype.options.icon = defaultIcon;
@@ -161,6 +162,10 @@ export default function CurrentRide({ socketRef }) {
 
   return (
     <div className="w-full h-screen flex flex-col relative overflow-hidden bg-gray-50">
+      {/* Navbar */}
+      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
+      <Navbar />
+      </div>
       {/* Map Layer */}
       <div className="absolute inset-0 z-0">
         <MapContainer

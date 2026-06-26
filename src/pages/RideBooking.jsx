@@ -149,7 +149,7 @@ export default function RideBooking({ socketRef }) {
     isLoading: loadingDrivers,
     error: driverError,
   } = useQuery({
-    queryKey: ["nearbyDrivers", pickupRef.current?.location],
+    queryKey: ["nearby", pickupRef.current?.location],
     queryFn: async () => {
       const pickupLocation = pickupRef.current?.location;
       const res = await api.get(
@@ -172,7 +172,11 @@ export default function RideBooking({ socketRef }) {
   return (
     <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
       {/* Navbar */}
+      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
+
       <Navbar />
+      </div>
+      <div className="h-[120px] w-full"></div>
 
       {select === "timer" && (
         <div className="w-full flex justify-center my-4 absolute top-16 z-30 bg-gray-50 opacity-50">
@@ -181,7 +185,7 @@ export default function RideBooking({ socketRef }) {
       )}
 
       {/* Main Layout */}
-      <div className="flex flex-col-reverse md:flex-row grow overflow-hidden">
+      <div className="flex px-[50px] flex-col-reverse md:flex-row grow overflow-hidden">
         {/* Left: Location Picker */}
         <div className="w-full md:w-[40%] bg-white p-6 overflow-y-auto max-h-[calc(100vh-64px)]">
           <LocationPicker

@@ -15,6 +15,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 // Default marker icons
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import Navbar from "../components/Navbar";
 
 
 const defaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
@@ -120,6 +121,10 @@ export default function FinalRide({ socketRef }) {
 
   return (
     <div className="w-full h-screen relative flex flex-col bg-gray-50">
+      {/* Navbar */}
+      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
+      <Navbar />
+      </div>
       <div className="absolute inset-0 z-0">
         <MapContainer
           center={center}

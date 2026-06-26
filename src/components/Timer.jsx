@@ -9,7 +9,7 @@ export default function Timer({ setSelect, rideId }) {
   const duration = 30;
   const navigate = useNavigate();
 
-  console.log(rideId)
+  console.log(rideId);
   const rideStatus = useCallback(async () => {
     try {
       const res = await api.get("/ride/status", {
@@ -29,29 +29,38 @@ export default function Timer({ setSelect, rideId }) {
 
   useEffect(() => {
     let interval;
+
+    const triggerTimes = new Set([5, 10, 15, 20, 25, 30]);
+
     if (running) {
       interval = setInterval(() => {
-        rideStatus();
         setSeconds((prev) => {
-          if (prev >= duration) {
-            setRunning(false);
+          const next = prev + 1;
+
+          // Call rideStatus only at specific seconds
+          if (triggerTimes.has(next)) {
+            rideStatus();
+          }
+
+          if (next >= duration) {
             clearInterval(interval);
+            setRunning(false);
             return duration;
           }
-          return prev + 1;
+
+          return next;
         });
-      }, 6000);
+      }, 1000);
     }
 
     return () => clearInterval(interval);
-  }, [running, rideStatus]);
+  }, [running, rideStatus, duration]);
 
   const handleReset = () => {
     setRunning(false);
     setSeconds(0);
     setSelect("");
   };
-
 
   const formatTime = (secs) => {
     const minutes = Math.floor(secs / 60);
@@ -63,8 +72,9 @@ export default function Timer({ setSelect, rideId }) {
 
   return (
     <div
-      className={`${!running ? "pointer-events-none opacity-0" : "opacity-100 z-50"
-        } fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300`}
+      className={`${
+        !running ? "pointer-events-none opacity-0" : "opacity-100 z-50"
+      } fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300`}
     >
       <div className="bg-white shadow-2xl rounded-3xl p-8 w-[90%] max-w-sm flex flex-col items-center relative animate-in fade-in zoom-in duration-300">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">
