@@ -12,6 +12,7 @@ import CurrentRide from "./pages/CurrentRide";
 import FinalRide from "./pages/FinalRide";
 import ProfileImgUpdateForm from "./components/ProfileImageUpdateForm";
 import RideHistory from "./pages/RideHistory";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const baseUrl = "https://backend-uber-model.onrender.com";
 const baseUrl2 = "http://localhost:8080"
@@ -45,7 +46,8 @@ function Router() {
           <Route path="/currentride" element={<CurrentRide socketRef={socketRef} />} />
           <Route path="/finalride" element={<FinalRide socketRef={socketRef} />} />
           <Route path="/update/image" element={<ProfileImgUpdateForm />} />
-          {/* <Route path="/ride-history" element={<RideHistory />} /> */}
+          <Route path="/ride-history" element={<RideHistory />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
 
         <ToastContainer

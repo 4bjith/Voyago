@@ -35,6 +35,35 @@ export default function Home() {
     }
   })
 
+  const { data: activeRide } = useQuery({
+    queryKey: ["activeRide", token],
+    queryFn: async () => {
+      if (!token) return null;
+      try {
+        const res = await api.get("/ride/active", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        return res.data?.data;
+      } catch (err) {
+        console.error("Error fetching active ride", err);
+        return null;
+      }
+    },
+    enabled: !!token,
+  });
+
+  useEffect(() => {
+    if (activeRide) {
+      if (activeRide.status === "accepted") {
+        navigate(`/currentride?rideid=${activeRide._id}`);
+      } else if (activeRide.status === "in_progress") {
+        navigate(`/finalride?id=${activeRide._id}`);
+      } else if (activeRide.status === "requested") {
+        navigate(`/bookride`);
+      }
+    }
+  }, [activeRide, navigate]);
+
 
   // -----------------navbar effect -------------
  useEffect(() => {

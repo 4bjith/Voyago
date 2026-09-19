@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import api from "../api/axiosClient";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import UserStore from "../zustand/UserStore";
 
 export default function Timer({ setSelect, rideId }) {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(true);
   const duration = 30;
   const navigate = useNavigate();
+  const token = UserStore((state) => state.token);
 
   console.log(rideId);
   const rideStatus = useCallback(async () => {
@@ -21,11 +23,15 @@ export default function Timer({ setSelect, rideId }) {
         toast.success("Your ride has been accepted!");
         setSelect("");
         navigate(`/currentride?rideid=${rideId}`);
+      } else if (data.data?.status === "cancelled") {
+        setRunning(false);
+        toast.error("Your ride request was declined or cancelled.");
+        setSelect("");
       }
     } catch (error) {
       console.error("Error fetching ride status:", error);
     }
-  }, [rideId]);
+  }, [rideId, navigate, setSelect]);
 
   useEffect(() => {
     let interval;
@@ -56,10 +62,20 @@ export default function Timer({ setSelect, rideId }) {
     return () => clearInterval(interval);
   }, [running, rideStatus, duration]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     setRunning(false);
     setSeconds(0);
     setSelect("");
+    try {
+      await api.put("/ride/cancel", { rideId }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast.info("Ride request cancelled.");
+    } catch (err) {
+      console.error("Failed to cancel ride request", err);
+    }
   };
 
   const formatTime = (secs) => {

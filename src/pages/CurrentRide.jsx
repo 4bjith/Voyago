@@ -16,6 +16,7 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
+import UserStore from "../zustand/UserStore";
 import Navbar from "../components/Navbar";
 
 const defaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
@@ -60,6 +61,7 @@ export default function CurrentRide({ socketRef }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [driverLocation, setDriverLocation] = useState(null);
   const [route, setRoute] = useState([]);
+  const token = UserStore((state) => state.token);
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -93,27 +95,38 @@ export default function CurrentRide({ socketRef }) {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // Driver location from socket
+  // Driver location from socket (with cleanup)
   useEffect(() => {
-    if (!socketRef.current) return;
+    const socket = socketRef.current;
+    if (!socket) return;
 
-    socketRef.current.on("driver:location", (loc) => {
+    const handleDriverLocation = (loc) => {
       setDriverLocation(loc);
-    });
-  }, []);
+    };
+
+    socket.on("driver:location", handleDriverLocation);
+    return () => {
+      socket.off("driver:location", handleDriverLocation);
+    };
+  }, [socketRef]);
 
   // Fetch route
   const getRoute = async () => {
     if (!currentLocation || !driverLocation) return;
 
     try {
-      const apiKey =
-        "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2OTg1ZDk4ZjVkNTQxMWU5OTAzZjVmMGNjMjZlYWIxIiwiaCI6Im11cm11cjY0In0=";
-
-      const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${driverLocation.lng},${driverLocation.lat}&end=${currentLocation.lng},${currentLocation.lat}&geometries=geojson`;
-
-      const res = await fetch(url);
-      const data = await res.json();
+      const res = await api.get(`/ride/route`, {
+        params: {
+          startLng: driverLocation.lng,
+          startLat: driverLocation.lat,
+          endLng: currentLocation.lng,
+          endLat: currentLocation.lat
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = res.data;
 
       if (!data.features) return;
 
@@ -150,15 +163,40 @@ export default function CurrentRide({ socketRef }) {
     enabled: !!rideId,
   });
 
+  // Restore driver location from database on reload/mount if socket hasn't emitted yet
   useEffect(() => {
-    socketRef.current?.on("ride:status", (data) => {
+    if (rideInfo?.driver?.location?.coordinates && !driverLocation) {
+      const [lng, lat] = rideInfo.driver.location.coordinates;
+      if (lng && lat) {
+        setDriverLocation({ lat, lng });
+      }
+    }
+  }, [rideInfo, driverLocation]);
+
+  // Check if ride has already started in DB and redirect
+  useEffect(() => {
+    if (rideInfo?.status === "in_progress") {
+      navigate(`/finalride?id=${rideId}`);
+    }
+  }, [rideInfo, rideId, navigate]);
+
+  // Socket listener for ride status updates (with cleanup)
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const handleRideStatus = (data) => {
       const { status } = data;
       if (status === "in_progress") {
-        // navigate to final ride page
         navigate(`/finalride?id=${rideId}`);
       }
-    });
-  }, [rideId, socketRef, currentLocation]);
+    };
+
+    socket.on("ride:status", handleRideStatus);
+    return () => {
+      socket.off("ride:status", handleRideStatus);
+    };
+  }, [rideId, socketRef, navigate]);
 
   return (
     <div className="w-full h-screen flex flex-col relative overflow-hidden bg-gray-50">

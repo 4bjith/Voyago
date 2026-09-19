@@ -6,10 +6,10 @@ import { toast } from "react-toastify";
 import CurrentMap2 from "../components/CurrentMap2";
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
-import DriverCards from "../components/DriverCards";
-import RideForm from "../components/RideForm";
 import Timer from "../components/Timer";
 import Footer from "../components/Footer";
+import FareEstimator from "../components/FareEstimator";
+import { useNavigate } from "react-router-dom";
 
 export default function RideBooking({ socketRef }) {
   const pickupRef = useRef();
@@ -24,6 +24,38 @@ export default function RideBooking({ socketRef }) {
   const token = UserStore((state) => state.token);
   const [driverInfo, setDriverInfo] = useState(null);
   const [rideId, setRideId] = useState(null);
+  const navigate = useNavigate();
+
+  // Check for active ride on mount
+  const { data: activeRide } = useQuery({
+    queryKey: ["activeRide", token],
+    queryFn: async () => {
+      if (!token) return null;
+      try {
+        const res = await api.get("/ride/active", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        return res.data?.data;
+      } catch (err) {
+        console.error("Error fetching active ride", err);
+        return null;
+      }
+    },
+    enabled: !!token,
+  });
+
+  useEffect(() => {
+    if (activeRide) {
+      if (activeRide.status === "accepted") {
+        navigate(`/currentride?rideid=${activeRide._id}`);
+      } else if (activeRide.status === "in_progress") {
+        navigate(`/finalride?id=${activeRide._id}`);
+      } else if (activeRide.status === "requested") {
+        setRideId(activeRide._id);
+        setSelect("timer");
+      }
+    }
+  }, [activeRide, navigate]);
 
   // ✅ Calculate distance (Haversine formula)
   const calculateDistance = (coord1, coord2) => {
@@ -78,11 +110,18 @@ export default function RideBooking({ socketRef }) {
     }
 
     try {
-      const apiKey =
-        "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2OTg1ZDk4ZjVkNTQxMWU5OTAzZjVmMGNjMjZlYWIxIiwiaCI6Im11cm11cjY0In0=";
-      const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${pickupLocation.lng},${pickupLocation.lat}&end=${dropoffLocation.lng},${dropoffLocation.lat}&geometries=geojson`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const res = await api.get(`/ride/route`, {
+        params: {
+          startLng: pickupLocation.lng,
+          startLat: pickupLocation.lat,
+          endLng: dropoffLocation.lng,
+          endLat: dropoffLocation.lat
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = res.data;
 
       if (!data.features) {
         toast.error("No route found");
@@ -199,40 +238,15 @@ export default function RideBooking({ socketRef }) {
             setOpen={setOpen}
           />
 
-          <div className="">
-            <div className=" w-full h-auto mt-8 ">
-              {drivers
-                .filter((d) => d.status === "online")
-                .map((items) => (
-                  <DriverCards
-                    key={items._id}
-                    id={items._id}
-                    name={items.name}
-                    mobile={items.mobile}
-                    profile={items.profileImg}
-                    vehicle={items.vehicle}
-                    licence={items.licence}
-                    setOpen={setOpen}
-                    setDriverInfo={setDriverInfo}
-                    setSelect={setSelect}
-                  />
-                ))}
-            </div>
-          </div>
-          <div className="w-full flex justify-start mt-6">
-            {open === "rideForm" && (
-              <RideForm
-                driverInfo={driverInfo}
-                socketRef={socketRef}
-                setOpen={setOpen}
-                pickupRef={pickupRef}
-                dropoffRef={dropoffRef}
-                setRideId={setRideId}
-                setSelect={setSelect}
-                distance={distance}
-              />
-            )}
-          </div>
+          {distance && (
+            <FareEstimator
+              distance={distance}
+              pickupRef={pickupRef}
+              dropoffRef={dropoffRef}
+              setRideId={setRideId}
+              setSelect={setSelect}
+            />
+          )}
         </div>
 
         {/* Right: Map */}
