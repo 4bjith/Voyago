@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Settings from "./pages/Settings";
 import Wallet from "./pages/Wallet";
 import HelpCenter from "./pages/HelpCenter";
+import PaymentCallback from "./pages/PaymentCallback";
 
 const baseUrl2 = "http://localhost:8080";
 
@@ -56,6 +57,7 @@ function Router() {
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/currentride" element={<CurrentRide socketRef={socketRef} />} />
           <Route path="/finalride" element={<FinalRide socketRef={socketRef} />} />
+          <Route path="/payment/callback" element={<PaymentCallback socketRef={socketRef} />} />
           <Route path="/update/image" element={<ProfileImgUpdateForm />} />
           <Route path="/ride-history" element={<RideHistory />} />
           <Route path="/admin" element={<AdminDashboard />} />
