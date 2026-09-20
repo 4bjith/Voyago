@@ -3,6 +3,8 @@ import api from "../api/axiosClient";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import UserStore from "../zustand/UserStore";
+import { FiX, FiShield } from "react-icons/fi";
+import { FaCar } from "react-icons/fa";
 
 export default function Timer({ setSelect, rideId }) {
   const [seconds, setSeconds] = useState(0);
@@ -11,21 +13,21 @@ export default function Timer({ setSelect, rideId }) {
   const navigate = useNavigate();
   const token = UserStore((state) => state.token);
 
-  console.log(rideId);
   const rideStatus = useCallback(async () => {
+    if (!rideId) return;
     try {
       const res = await api.get("/ride/status", {
-        params: { rideId: rideId },
+        params: { rideId },
       });
       const data = res.data;
       if (data.data?.status === "accepted") {
         setRunning(false);
-        toast.success("Your ride has been accepted!");
+        toast.success("Driver accepted your ride!");
         setSelect("");
         navigate(`/currentride?rideid=${rideId}`);
       } else if (data.data?.status === "cancelled") {
         setRunning(false);
-        toast.error("Your ride request was declined or cancelled.");
+        toast.error("Ride request was declined or timed out.");
         setSelect("");
       }
     } catch (error) {
@@ -35,25 +37,20 @@ export default function Timer({ setSelect, rideId }) {
 
   useEffect(() => {
     let interval;
-
-    const triggerTimes = new Set([5, 10, 15, 20, 25, 30]);
+    const triggerTimes = new Set([3, 6, 9, 12, 15, 18, 21, 24, 27, 30]);
 
     if (running) {
       interval = setInterval(() => {
         setSeconds((prev) => {
           const next = prev + 1;
-
-          // Call rideStatus only at specific seconds
           if (triggerTimes.has(next)) {
             rideStatus();
           }
-
           if (next >= duration) {
             clearInterval(interval);
             setRunning(false);
             return duration;
           }
-
           return next;
         });
       }, 1000);
@@ -62,17 +59,17 @@ export default function Timer({ setSelect, rideId }) {
     return () => clearInterval(interval);
   }, [running, rideStatus, duration]);
 
-  const handleReset = async () => {
+  const handleCancel = async () => {
     setRunning(false);
     setSeconds(0);
     setSelect("");
     try {
-      await api.put("/ride/cancel", { rideId }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      toast.info("Ride request cancelled.");
+      await api.put(
+        "/ride/cancel",
+        { rideId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.info("Ride search cancelled.");
     } catch (err) {
       console.error("Failed to cancel ride request", err);
     }
@@ -89,63 +86,46 @@ export default function Timer({ setSelect, rideId }) {
   return (
     <div
       className={`${
-        !running ? "pointer-events-none opacity-0" : "opacity-100 z-50"
-      } fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300`}
+        !running ? "pointer-events-none opacity-0" : "opacity-100 z-[999]"
+      } fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-300 p-4`}
     >
-      <div className="bg-white shadow-2xl rounded-3xl p-8 w-[90%] max-w-sm flex flex-col items-center relative animate-in fade-in zoom-in duration-300">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
-          Finding your ride...
-        </h2>
-
-        {/* Circular Timer Visual */}
-        <div className="relative w-40 h-40 flex items-center justify-center mb-6">
-          <svg className="w-full h-full transform -rotate-90">
-            <circle
-              cx="80"
-              cy="80"
-              r="70"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="transparent"
-              className="text-gray-200"
-            />
-            <circle
-              cx="80"
-              cy="80"
-              r="70"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="transparent"
-              strokeDasharray={440}
-              strokeDashoffset={440 - (440 * seconds) / duration}
-              className="text-black transition-all duration-1000 ease-linear"
-            />
-          </svg>
+      <div className="bg-white dark:bg-zinc-950 border border-neutral-200 dark:border-zinc-800 shadow-2xl rounded-3xl p-6 sm:p-8 w-full max-w-sm flex flex-col items-center relative text-center">
+        
+        {/* Monochromatic Radar Node */}
+        <div className="relative mb-6">
+          <div className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-zinc-900 flex items-center justify-center animate-radar">
+            <div className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-zinc-800 flex items-center justify-center animate-ping opacity-50"></div>
+          </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-4xl font-bold text-gray-900 tabular-nums">
-              {formatTime(seconds)}
-            </span>
+            <div className="w-12 h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shadow-lg text-lg">
+              <FaCar />
+            </div>
           </div>
         </div>
 
-        {/* Status Text */}
-        <p className="text-gray-500 text-center mb-8 text-sm px-4">
-          {running
-            ? "Contacting nearby drivers..."
-            : seconds >= duration
-              ? "Taking longer than expected..."
-              : "Search paused."}
+        <h2 className="text-xl font-black font-display text-black dark:text-white mb-1">
+          Finding Your Driver
+        </h2>
+        <div className="text-3xl font-black font-mono tracking-wider text-black dark:text-white my-2">
+          {formatTime(seconds)}
+        </div>
+
+        <p className="text-xs text-neutral-500 min-h-[32px] flex items-center justify-center px-2">
+          Contacting nearest verified drivers via automated cascade...
         </p>
 
-        {/* Controls */}
-        <div className="flex gap-4 w-full">
-          <button
-            onClick={handleReset}
-            className="flex-1 py-3 rounded-xl font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-          >
-            Cancel Request
-          </button>
+        <div className="my-4 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-zinc-900 text-[10px] font-bold text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+          <FiShield />
+          <span>Voyago Telemetry Dispatch</span>
         </div>
+
+        <button
+          onClick={handleCancel}
+          className="w-full py-3 rounded-2xl font-bold text-xs bg-neutral-100 dark:bg-zinc-900 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-800 transition-colors border border-neutral-200 dark:border-zinc-800 flex items-center justify-center gap-1.5 active:scale-95"
+        >
+          <FiX />
+          <span>Cancel Search</span>
+        </button>
       </div>
     </div>
   );

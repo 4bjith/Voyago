@@ -3,10 +3,14 @@ import { toast } from "react-toastify";
 import UserStore from "../zustand/UserStore";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axiosClient";
+import { useTheme } from "../context/ThemeContext";
+import Logo from "../components/Logo";
+import { FiSun, FiMoon, FiEye, FiEyeOff, FiArrowRight, FiShield, FiLock, FiMail, FiCheckCircle } from "react-icons/fi";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   const emailRef = useRef();
   const passwordRef = useRef();
@@ -22,120 +26,180 @@ export default function Login() {
       return;
     }
 
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your system.");
-      return;
-    }
     setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const location = {
-          type: "Point",
-          coordinates: [position.coords.longitude, position.coords.latitude],
-        };
-        try {
-          const response = await api.post("/login", {
-            email,
-            password,
-            location,
-          });
-          addToken(response.data.token);
-          toast.success("Log in successful !!");
-          navigate("/");
-        } catch (err) {
-          console.error("Login error:", err);
-          toast.error(err.response?.data?.message || "Login failed");
-        } finally {
-          setLoading(false);
-        }
-      },
-      () => {
-        toast.error("Unable to retrieve your location.");
+
+    const proceedLogin = async (location) => {
+      try {
+        const response = await api.post("/login", {
+          email,
+          password,
+          location,
+        });
+        addToken(response.data.token);
+        toast.success("Welcome back! Signed in successfully.");
+        navigate("/");
+      } catch (err) {
+        console.error("Login error:", err);
+        toast.error(err.response?.data?.message || "Invalid credentials.");
+      } finally {
         setLoading(false);
       }
-    );
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          proceedLogin({
+            type: "Point",
+            coordinates: [position.coords.longitude, position.coords.latitude],
+          });
+        },
+        () => {
+          // Fallback coordinates if location permission is denied
+          proceedLogin({
+            type: "Point",
+            coordinates: [77.2090, 28.6139],
+          });
+        }
+      );
+    } else {
+      proceedLogin({
+        type: "Point",
+        coordinates: [77.2090, 28.6139],
+      });
+    }
   };
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
-      if (!emailRef.current?.value || !passwordRef.current?.value) {
-        toast.error("Please enter both email and password.");
-        return;
-      }
       loginSubmit();
     }
   };
 
   return (
-    <div className="w-full h-screen grid md:grid-cols-2 overflow-hidden bg-white text-black font-sans">
-      {/* Left Section: Brand (Hidden on mobile, Black bg) */}
-      <div className="hidden md:flex flex-col justify-between bg-black text-white p-12 lg:p-16 relative">
-        <div className="z-10">
-          <h1 className="text-3xl font-bold tracking-tighter">VOYAGO/UBER</h1>
+    <div className="w-full min-h-screen grid lg:grid-cols-12 bg-neutral-50 dark:bg-black text-black dark:text-white transition-colors font-sans">
+      
+      {/* Left Brand Showcase Column */}
+      <div className="hidden lg:flex lg:col-span-6 bg-black text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden border-r border-neutral-200 dark:border-zinc-800">
+        
+        <div className="z-10 flex items-center justify-between">
+          <Logo size="md" />
+
+          <span className="px-3 py-1 rounded-full bg-white/10 text-[11px] font-bold text-white border border-white/20">
+            Passenger Portal
+          </span>
         </div>
-        <div className="z-10 gap-6 flex flex-col">
-          <h2 className="text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1]">
-            Go anywhere,<br />
-            get anything.
+
+        <div className="z-10 space-y-6 max-w-lg my-auto py-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-700 text-white text-xs font-bold">
+            <FiShield className="w-3.5 h-3.5" />
+            <span>Voyago Verified Mobility Cloud</span>
+          </div>
+
+          <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white leading-tight">
+            Seamless Urban <br />
+            <span className="text-zinc-400">Navigation.</span>
           </h2>
-          <p className="text-gray-400 text-lg max-w-md">
-            The smartest way to get around. Request a ride and we’ll get you there in style and comfort.
+
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Sign in to access your saved places, instant ride bookings, digital receipts, and real-time trip tracking.
           </p>
+
+          <div className="pt-4 grid grid-cols-2 gap-4 text-xs">
+            <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-white">
+                <FiCheckCircle className="w-4 h-4 text-white" />
+                <span>Zero Surge Shock</span>
+              </div>
+              <p className="text-zinc-400 text-[11px]">Strict upfront locked estimates.</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-white">
+                <FiCheckCircle className="w-4 h-4 text-white" />
+                <span>Voyago Shield</span>
+              </div>
+              <p className="text-zinc-400 text-[11px]">24/7 SOS & trip monitoring.</p>
+            </div>
+          </div>
         </div>
-        <div className="z-10 text-sm text-gray-500">
-          &copy; 2025 Uber/Voyago Clone. All rights reserved.
+
+        <div className="z-10 text-xs text-zinc-500 flex items-center justify-between pt-8 border-t border-zinc-800">
+          <span>&copy; {new Date().getFullYear()} Voyago Technologies Inc.</span>
+          <span className="text-zinc-400">256-Bit SSL Encrypted</span>
         </div>
-        {/* Subtle pattern or gradient overlay could go here */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-gray-900 to-transparent opacity-40 pointer-events-none" />
       </div>
 
-      {/* Right Section: Form (White bg) */}
-      <div className="flex flex-col justify-center items-center p-6 sm:p-12 md:p-16 w-full max-w-xl mx-auto md:max-w-none">
-        <div className="w-full max-w-sm space-y-8">
-          <div className="text-center md:text-left">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Sign in</h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Welcome back! Please enter your details.
+      {/* Right Login Form Column */}
+      <div className="lg:col-span-6 flex flex-col justify-between p-6 sm:p-12 lg:p-16 relative">
+        {/* Top bar controls */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="lg:hidden">
+            <Logo size="sm" />
+          </div>
+
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-neutral-100 dark:bg-zinc-900 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white ml-auto border border-neutral-200 dark:border-zinc-800 transition-all"
+            title="Toggle theme"
+          >
+            {isDark ? <FiSun className="w-4 h-4 text-amber-400" /> : <FiMoon className="w-4 h-4 text-black" />}
+          </button>
+        </div>
+
+        {/* Center Form */}
+        <div className="max-w-md w-full mx-auto space-y-8 my-auto">
+          <div>
+            <h1 className="text-3xl font-black font-display text-black dark:text-white tracking-tight">
+              Sign In
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+              Enter your credentials to manage rides and account settings.
             </p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
+            {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                ref={emailRef}
-                placeholder="name@example.com"
-                onKeyDown={handleKeyDown}
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-              />
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5 pl-1">
+                Email Address
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-4 top-3.5 text-neutral-400" />
+                <input
+                  type="email"
+                  ref={emailRef}
+                  placeholder="name@example.com"
+                  onKeyDown={handleKeyDown}
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-black dark:text-white text-sm focus:outline-none focus:border-black dark:focus:border-white transition-all font-medium"
+                />
+              </div>
             </div>
 
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            {/* Password Field */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5 pl-1">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
+                  Password
+                </label>
+                <Link to="/support" className="text-xs font-bold text-neutral-500 hover:text-black dark:hover:text-white transition-colors">
+                  Need help?
+                </Link>
+              </div>
               <div className="relative">
+                <FiLock className="absolute left-4 top-3.5 text-neutral-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   ref={passwordRef}
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   onKeyDown={handleKeyDown}
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all pr-12"
+                  className="w-full pl-11 pr-12 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-black dark:text-white text-sm focus:outline-none focus:border-black dark:focus:border-white transition-all font-medium"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-3.5 text-neutral-400 hover:text-black dark:hover:text-white"
                 >
-                  {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                      <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745A10.02 10.02 0 0021 12c0-5.523-4.477-10-10-10a10.012 10.012 0 00-4.406 1.025L3.28 2.22zm-2.028 11.23a.75.75 0 111.496-.346C4.018 16.29 7.669 18.5 12 18.5c2.324 0 4.414-.64 6.182-1.76l-1.096-1.096A7.95 7.95 0 0112 17c-4.418 0-8-3.582-8-8 0-.493.064-.972.186-1.432L1.252 13.45z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                      <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-                      <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
             </div>
@@ -143,31 +207,35 @@ export default function Login() {
             <button
               onClick={loginSubmit}
               disabled={loading}
-              className={`w-full py-3.5 rounded-lg bg-black text-white font-semibold text-sm transition-all shadow-lg hover:shadow-xl hover:bg-gray-900 active:scale-[0.99] flex items-center justify-center ${loading ? "opacity-75 cursor-not-allowed" : ""
-                }`}
+              className="w-full py-4 rounded-2xl bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 font-black text-sm tracking-wide shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                  Processing...
+                  <span className="h-4 w-4 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin"></span>
+                  <span>Verifying...</span>
                 </>
               ) : (
-                "Sign in"
+                <>
+                  <span>Sign In</span>
+                  <FiArrowRight className="w-4 h-4" />
+                </>
               )}
             </button>
           </div>
 
-          <p className="text-center text-sm text-gray-500">
-            Don't have an account?{" "}
-            <Link to="/register" className="font-semibold text-black hover:underline">
+          <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">
+            Don't have a Voyago account?{" "}
+            <Link to="/register" className="font-black text-black dark:text-white underline underline-offset-4">
               Create an account
             </Link>
           </p>
         </div>
+
+        <div className="pt-8 text-center text-[11px] text-neutral-400">
+          By continuing, you agree to Voyago's Terms of Service and Privacy Policy.
+        </div>
       </div>
+
     </div>
   );
 }

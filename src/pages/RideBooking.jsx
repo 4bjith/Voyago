@@ -18,26 +18,24 @@ export default function RideBooking({ socketRef }) {
   const [route, setRoute] = useState([]);
   const [distance, setDistance] = useState(null);
   const [drivers, setDrivers] = useState([]);
-  const [coords, setCoords] = useState(null); // ✅ store geolocation here
+  const [coords, setCoords] = useState(null);
   const [open, setOpen] = useState("");
   const [select, setSelect] = useState("");
   const token = UserStore((state) => state.token);
-  const [driverInfo, setDriverInfo] = useState(null);
   const [rideId, setRideId] = useState(null);
   const navigate = useNavigate();
 
-  // Check for active ride on mount
+  // Active ride verification on mount
   const { data: activeRide } = useQuery({
     queryKey: ["activeRide", token],
     queryFn: async () => {
       if (!token) return null;
       try {
         const res = await api.get("/ride/active", {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         return res.data?.data;
       } catch (err) {
-        console.error("Error fetching active ride", err);
         return null;
       }
     },
@@ -57,11 +55,10 @@ export default function RideBooking({ socketRef }) {
     }
   }, [activeRide, navigate]);
 
-  // ✅ Calculate distance (Haversine formula)
   const calculateDistance = (coord1, coord2) => {
     if (!coord1 || !coord2) return;
     const toRad = (deg) => (deg * Math.PI) / 180;
-    const R = 6371; // km
+    const R = 6371;
     const dLat = toRad(coord2.lat - coord1.lat);
     const dLng = toRad(coord2.lng - coord1.lng);
     const a =
@@ -73,39 +70,37 @@ export default function RideBooking({ socketRef }) {
     return (R * c).toFixed(2);
   };
 
-  // ✅ Get Current Location (async)
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error("Geolocation is not supported by your browser"));
+        reject(new Error("Geolocation is not supported"));
       } else {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            resolve({ latitude, longitude });
-          },
-          (error) => {
-            reject(error);
-          }
+          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+          (err) => reject(err)
         );
       }
     });
   };
 
-  // ✅ Fetch current coordinates once
   useEffect(() => {
     getCurrentLocation()
-      .then(setCoords)
-      .catch((err) => console.error("Error getting location:", err));
+      .then((c) => {
+        setCoords(c);
+        if (pickupRef.current && !pickupRef.current.value) {
+          pickupRef.current.location = { lat: c.latitude, lng: c.longitude };
+          pickupRef.current.value = "Current Location";
+        }
+      })
+      .catch((err) => console.log("Location not auto-fetched:", err));
   }, []);
 
-  // ✅ Show route
   const showRoute = async () => {
-    const pickupLocation = pickupRef.current.location;
-    const dropoffLocation = dropoffRef.current.location;
+    const pickupLocation = pickupRef.current?.location;
+    const dropoffLocation = dropoffRef.current?.location;
 
     if (!pickupLocation || !dropoffLocation) {
-      toast.error("Please select both pickup and dropoff locations");
+      toast.error("Please specify both pickup and dropoff points.");
       return;
     }
 
@@ -115,35 +110,34 @@ export default function RideBooking({ socketRef }) {
           startLng: pickupLocation.lng,
           startLat: pickupLocation.lat,
           endLng: dropoffLocation.lng,
-          endLat: dropoffLocation.lat
+          endLat: dropoffLocation.lat,
         },
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = res.data;
 
       if (!data.features) {
-        toast.error("No route found");
+        toast.error("No valid driving route found.");
         return;
       }
 
-      const coords = data.features[0].geometry.coordinates.map((c) => ({
+      const points = data.features[0].geometry.coordinates.map((c) => ({
         lat: c[1],
         lng: c[0],
       }));
 
-      setRoute(coords);
-      setDistance(calculateDistance(pickupLocation, dropoffLocation));
+      setRoute(points);
+      const calculatedDist = calculateDistance(pickupLocation, dropoffLocation);
+      setDistance(calculatedDist);
+      toast.success(`Route plotted: ${calculatedDist} km`);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to fetch route. Please try again.");
+      toast.error("Failed to generate route polyline.");
     }
   };
 
-  // ✅ Fetch suggestions
   const fetchPlaces = async (query, type) => {
-    if (query.length < 3) return; // Only fetch if query has at least 3 characters
+    if (query.length < 3) return;
     if (!query.trim()) return;
     try {
       const res = await fetch(
@@ -165,13 +159,12 @@ export default function RideBooking({ socketRef }) {
     }
   };
 
-  // ✅ Handle selection
   const handleSelectPlace = (place) => {
     if (place.type === "pickup") {
-      pickupRef.current.value = place.name;
+      pickupRef.current.value = place.name.split(",").slice(0, 3).join(",");
       pickupRef.current.location = { lat: place.lat, lng: place.lon };
     } else if (place.type === "dropoff") {
-      dropoffRef.current.value = place.name;
+      dropoffRef.current.value = place.name.split(",").slice(0, 3).join(",");
       dropoffRef.current.location = { lat: place.lat, lng: place.lon };
     }
 
@@ -182,15 +175,11 @@ export default function RideBooking({ socketRef }) {
     setSuggestion([]);
   };
 
-  // ✅ React Query: Fetch nearby drivers
-  const {
-    data: nearbyData,
-    isLoading: loadingDrivers,
-    error: driverError,
-  } = useQuery({
+  const { data: nearbyData } = useQuery({
     queryKey: ["nearby", pickupRef.current?.location],
     queryFn: async () => {
       const pickupLocation = pickupRef.current?.location;
+      if (!pickupLocation) return null;
       const res = await api.get(
         `/nearby?lat=${pickupLocation.lat}&lng=${pickupLocation.lng}`
       );
@@ -199,69 +188,68 @@ export default function RideBooking({ socketRef }) {
     enabled: !!coords,
   });
 
-  // ✅ Update driver list when data changes
   useEffect(() => {
     if (nearbyData?.drivers) {
       setDrivers(nearbyData.drivers);
     }
   }, [nearbyData]);
 
-  // console.log("Drivers:", drivers);
-
   return (
-    <div className="w-screen h-100vh flex flex-col overflow-x-hidden bg-gray-50">
-      {/* Navbar */}
-      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
-
-      <Navbar />
+    <div className="w-full min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors font-sans overflow-x-hidden">
+      
+      {/* Floating Header */}
+      <div id="navbar" className="w-full fixed top-4 z-50 flex justify-center">
+        <Navbar />
       </div>
-      <div className="h-[120px] w-full"></div>
+      <div className="h-24"></div>
 
       {select === "timer" && (
-        <div className="w-full flex justify-center my-4 absolute top-16 z-30 bg-gray-50 opacity-50">
-          <Timer setSelect={setSelect} rideId={rideId} />
-        </div>
+        <Timer setSelect={setSelect} rideId={rideId} />
       )}
 
-      {/* Main Layout */}
-      <div className="flex px-[50px] flex-col-reverse md:flex-row grow overflow-hidden">
-        {/* Left: Location Picker */}
-        <div className="w-full md:w-[40%] bg-white p-6 overflow-y-auto max-h-[calc(100vh-64px)]">
-          <LocationPicker
-            pickupRef={pickupRef}
-            dropoffRef={dropoffRef}
-            suggestion={suggestion}
-            handleSelectPlace={handleSelectPlace}
-            fetchPlaces={fetchPlaces}
-            showRoute={showRoute}
-            distance={distance}
-            setOpen={setOpen}
-          />
-
-          {distance && (
-            <FareEstimator
-              distance={distance}
+      {/* Main Responsive Grid Layout */}
+      <main className="grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left: Monochromatic Booking Studio */}
+          <div className="lg:col-span-5 bg-white dark:bg-zinc-950 rounded-3xl p-6 sm:p-7 shadow-sm border border-neutral-200 dark:border-zinc-800 overflow-y-auto max-h-[calc(100vh-140px)]">
+            <LocationPicker
               pickupRef={pickupRef}
               dropoffRef={dropoffRef}
-              setRideId={setRideId}
-              setSelect={setSelect}
+              suggestion={suggestion}
+              handleSelectPlace={handleSelectPlace}
+              fetchPlaces={fetchPlaces}
+              showRoute={showRoute}
+              distance={distance}
+              setOpen={setOpen}
             />
-          )}
-        </div>
 
-        {/* Right: Map */}
-        <div className="w-full md:w-[58%] h-[50vh] md:h-auto overflow-hidden">
-          <CurrentMap2
-            route={route}
-            drivers={drivers}
-            pickupLocation={pickupRef?.current?.location}
-            dropoffLocation={dropoffRef?.current?.location}
-          />
-          {/* <div className="w-full flex justify-center">
-            {rideId && <Timer rideId={rideId} />}
-          </div> */}
+            {distance && (
+              <FareEstimator
+                distance={distance}
+                pickupRef={pickupRef}
+                dropoffRef={dropoffRef}
+                setRideId={setRideId}
+                setSelect={setSelect}
+              />
+            )}
+          </div>
+
+          {/* Right: Map Canvas */}
+          <div className="lg:col-span-7 h-[480px] lg:h-[calc(100vh-140px)] min-h-[420px] sticky top-28 rounded-3xl overflow-hidden shadow-sm border border-neutral-200 dark:border-zinc-800">
+            <CurrentMap2
+              route={route}
+              drivers={drivers}
+              pickupLocation={pickupRef?.current?.location}
+              dropoffLocation={dropoffRef?.current?.location}
+              currentLocation={coords ? { lat: coords.latitude, lng: coords.longitude } : null}
+              className="w-full h-full"
+            />
+          </div>
+
         </div>
-      </div>
+      </main>
+
       <Footer />
     </div>
   );

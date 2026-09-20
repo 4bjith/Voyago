@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DatePicker from "react-datepicker";
-import { FaCalendarAlt, FaClock, FaCar, FaMotorcycle, FaRoute } from "react-icons/fa";
+import { FaMotorcycle, FaCar, FaCarSide } from "react-icons/fa";
+import { FiArrowRight, FiCalendar, FiShield, FiClock } from "react-icons/fi";
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
 import api from "../api/axiosClient";
@@ -15,7 +16,6 @@ export default function FareEstimator({ distance, pickupRef, dropoffRef, setRide
   const [isRequesting, setIsRequesting] = useState(false);
   const token = UserStore((state) => state.token);
 
-  // Fetch logged-in user info
   const { data: userData } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -28,7 +28,6 @@ export default function FareEstimator({ distance, pickupRef, dropoffRef, setRide
 
   const userId = userData?.data?._id;
 
-  // Fetch fare estimates
   const { data: estimatesData, isLoading } = useQuery({
     queryKey: ["fare-estimates", distance],
     queryFn: async () => {
@@ -40,109 +39,158 @@ export default function FareEstimator({ distance, pickupRef, dropoffRef, setRide
     enabled: !!distance && !!token,
   });
 
-  const estimates = estimatesData?.estimates || [];
+  const defaultEstimates = [
+    {
+      vehicleType: "Bike",
+      name: "Voyago Moto",
+      description: "Quick & agile bike for solo travel",
+      capacity: "1 Rider",
+      eta: 2,
+      fare: Math.max(35, Math.round(parseFloat(distance || 5) * 8 + 20)),
+    },
+    {
+      vehicleType: "Sedan",
+      name: "Voyago Go Sedan",
+      description: "Comfortable air-conditioned compacts",
+      capacity: "4 Seats",
+      eta: 3,
+      fare: Math.max(70, Math.round(parseFloat(distance || 5) * 14 + 40)),
+      popular: true,
+    },
+    {
+      vehicleType: "SUV",
+      name: "Voyago Max SUV",
+      description: "Spacious 6-seater premium travel",
+      capacity: "6 Seats",
+      eta: 5,
+      fare: Math.max(120, Math.round(parseFloat(distance || 5) * 22 + 60)),
+    },
+  ];
+
+  const estimates = estimatesData?.estimates?.length ? estimatesData.estimates : defaultEstimates;
 
   const handleRequestRide = async () => {
     if (!pickupRef.current?.location || !dropoffRef.current?.location) {
-      toast.error("Please specify pickup and dropoff locations.");
+      toast.error("Please specify both pickup and destination points.");
       return;
     }
-    if (!userId) {
-      toast.error("Please log in to book a ride.");
+    if (!token || !userId) {
+      toast.info("Please sign in to confirm your ride request.");
       return;
     }
 
     setIsRequesting(true);
     try {
-      const res = await api.post("/bookride", {
-        userId,
-        pickup: pickupRef.current.value,
-        dropoff: dropoffRef.current.value,
-        pickupCoordinates: [pickupRef.current.location.lat, pickupRef.current.location.lng],
-        dropoffCoordinates: [dropoffRef.current.location.lat, dropoffRef.current.location.lng],
-        date: isScheduled ? date : new Date(),
-        time: isScheduled ? time : new Date(),
-        distance: parseFloat(distance),
-        vehicleType: selectedTier,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.post(
+        "/bookride",
+        {
+          userId,
+          pickup: pickupRef.current.value,
+          dropoff: dropoffRef.current.value,
+          pickupCoordinates: [pickupRef.current.location.lat, pickupRef.current.location.lng],
+          dropoffCoordinates: [dropoffRef.current.location.lat, dropoffRef.current.location.lng],
+          date: isScheduled ? date : new Date(),
+          time: isScheduled ? time : new Date(),
+          distance: parseFloat(distance),
+          vehicleType: selectedTier,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (res.data && res.data.rideId) {
         setRideId(res.data.rideId);
         setSelect("timer");
-        toast.success("Matching with the nearest driver...");
+        toast.success("Matching with nearest available driver...");
       }
     } catch (err) {
       console.error("Booking error:", err);
-      const msg = err.response?.data?.message || "Failed to find driver. Please try again.";
-      toast.error(msg);
+      toast.error(err.response?.data?.message || "Could not find nearby driver.");
     } finally {
       setIsRequesting(false);
     }
   };
 
-  const getTierIcon = (type) => {
-    switch (type) {
+  const renderTierIcon = (vehicleType) => {
+    switch (vehicleType) {
       case "Bike":
-        return <FaMotorcycle className="text-2xl" />;
+        return <FaMotorcycle className="text-lg" />;
       case "SUV":
-        return <FaCar className="text-3xl text-indigo-600 animate-pulse" />;
+        return <FaCarSide className="text-xl" />;
       default:
-        return <FaCar className="text-2xl text-gray-800" />;
+        return <FaCar className="text-lg" />;
     }
   };
 
   if (!distance) return null;
 
   return (
-    <div className="w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-6 mt-6 transition-all duration-300">
+    <div className="w-full bg-white dark:bg-zinc-950 rounded-3xl border border-neutral-200 dark:border-zinc-800 p-5 sm:p-6 mt-6 transition-all shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <FaRoute className="text-gray-500" />
-          <span>Select your ride</span>
-        </h3>
-        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-          {distance} km away
+        <div>
+          <h3 className="text-base font-black font-display text-black dark:text-white">
+            Select Your Ride
+          </h3>
+          <p className="text-xs text-neutral-500">Transparent upfront pricing</p>
+        </div>
+        <span className="text-xs font-black text-black dark:text-white bg-neutral-100 dark:bg-zinc-900 px-3 py-1 rounded-xl">
+          {distance} km
         </span>
       </div>
 
       {isLoading ? (
-        <div className="space-y-3 py-4">
-          <div className="h-16 bg-gray-100 rounded-2xl animate-pulse"></div>
-          <div className="h-16 bg-gray-100 rounded-2xl animate-pulse"></div>
-          <div className="h-16 bg-gray-100 rounded-2xl animate-pulse"></div>
+        <div className="space-y-3 py-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 bg-neutral-100 dark:bg-zinc-900 rounded-2xl animate-pulse"></div>
+          ))}
         </div>
       ) : (
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2.5 mb-5">
           {estimates.map((est) => {
             const isSelected = selectedTier === est.vehicleType;
             return (
               <div
                 key={est.vehicleType}
                 onClick={() => setSelectedTier(est.vehicleType)}
-                className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+                className={`p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all ${
                   isSelected
-                    ? "border-black bg-gray-50 shadow-md transform -translate-y-0.5"
-                    : "border-gray-100 hover:border-gray-200 hover:bg-gray-50/50"
+                    ? "border-black dark:border-white bg-neutral-50 dark:bg-zinc-900 shadow-md scale-[1.01]"
+                    : "border-neutral-200 dark:border-zinc-800 hover:border-neutral-400 bg-white dark:bg-zinc-950"
                 }`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700">
-                    {getTierIcon(est.vehicleType)}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                        isSelected
+                          ? "bg-black text-white dark:bg-white dark:text-black"
+                          : "bg-neutral-100 dark:bg-zinc-800 text-neutral-700 dark:text-neutral-300"
+                      }`}
+                    >
+                      {renderTierIcon(est.vehicleType)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-extrabold text-black dark:text-white text-sm">
+                          {est.name}
+                        </h4>
+                        <span className="text-[10px] font-bold text-neutral-500 bg-neutral-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+                          {est.eta || 3} min
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-neutral-500 mt-0.5 max-w-[180px] truncate">
+                        {est.description}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-sm md:text-base flex items-center gap-1.5">
-                      {est.name}
-                      <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                        {est.eta} min ETA
-                      </span>
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-0.5">{est.description}</p>
+
+                  <div className="text-right">
+                    <span className="text-base sm:text-lg font-black font-display text-black dark:text-white">
+                      ₹{typeof est.fare === "number" ? est.fare.toFixed(2) : est.fare}
+                    </span>
+                    <span className="block text-[10px] text-neutral-400 font-bold uppercase">Upfront</span>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-lg font-extrabold text-gray-900">${est.fare.toFixed(2)}</span>
                 </div>
               </div>
             );
@@ -150,66 +198,80 @@ export default function FareEstimator({ distance, pickupRef, dropoffRef, setRide
         </div>
       )}
 
-      {/* Booking schedule option */}
-      <div className="border-t border-gray-100 pt-4 mb-6">
-        <button
-          onClick={() => setIsScheduled(!isScheduled)}
-          className="text-xs font-semibold text-gray-600 hover:text-black flex items-center gap-1.5 transition-colors"
-        >
-          {isScheduled ? "✓ Scheduled trip" : "📅 Schedule for later"}
-        </button>
+      {/* Schedule Option */}
+      <div className="pt-3 border-t border-neutral-100 dark:border-zinc-900 mb-5">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setIsScheduled(!isScheduled)}
+            className="text-xs font-bold text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white flex items-center gap-1.5 transition-colors"
+          >
+            <FiCalendar />
+            <span>{isScheduled ? "✓ Scheduled Departure" : "Schedule for Later"}</span>
+          </button>
+          {isScheduled && (
+            <button
+              type="button"
+              onClick={() => setIsScheduled(false)}
+              className="text-[11px] text-neutral-400 hover:text-black font-semibold"
+            >
+              Reset
+            </button>
+          )}
+        </div>
 
         {isScheduled && (
-          <div className="grid grid-cols-2 gap-4 mt-3 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex flex-col">
-              <label className="text-gray-500 text-[10px] uppercase font-bold mb-1 pl-1">Date</label>
-              <div className="relative">
-                <FaCalendarAlt className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400 z-10" />
-                <DatePicker
-                  selected={date}
-                  onChange={(d) => setDate(d)}
-                  className="w-full bg-gray-50 text-gray-900 text-sm py-2.5 pl-9 pr-3 rounded-xl border border-gray-100 focus:outline-none focus:ring-1 focus:ring-black"
-                  dateFormat="MMM d, yyyy"
-                  minDate={new Date()}
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <label className="text-neutral-400 text-[10px] uppercase font-bold mb-1 block">Pick Date</label>
+              <DatePicker
+                selected={date}
+                onChange={(d) => setDate(d)}
+                className="w-full bg-neutral-50 dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-neutral-200 dark:border-zinc-800 outline-none"
+                dateFormat="MMM d, yyyy"
+                minDate={new Date()}
+              />
             </div>
-            <div className="flex flex-col">
-              <label className="text-gray-500 text-[10px] uppercase font-bold mb-1 pl-1">Time</label>
-              <div className="relative">
-                <FaClock className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400 z-10" />
-                <DatePicker
-                  selected={time}
-                  onChange={(t) => setTime(t)}
-                  showTimeSelect
-                  showTimeSelectOnly
-                  timeIntervals={15}
-                  timeCaption="Time"
-                  dateFormat="h:mm aa"
-                  className="w-full bg-gray-50 text-gray-900 text-sm py-2.5 pl-9 pr-3 rounded-xl border border-gray-100 focus:outline-none focus:ring-1 focus:ring-black"
-                />
-              </div>
+            <div>
+              <label className="text-neutral-400 text-[10px] uppercase font-bold mb-1 block">Pick Time</label>
+              <DatePicker
+                selected={time}
+                onChange={(t) => setTime(t)}
+                showTimeSelect
+                showTimeSelectOnly
+                timeIntervals={15}
+                timeCaption="Time"
+                dateFormat="h:mm aa"
+                className="w-full bg-neutral-50 dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-neutral-200 dark:border-zinc-800 outline-none"
+              />
             </div>
           </div>
         )}
       </div>
 
       <button
+        type="button"
         onClick={handleRequestRide}
         disabled={isRequesting || isLoading}
-        className={`w-full py-4 rounded-2xl bg-black text-white font-bold text-sm tracking-wide shadow-lg shadow-gray-200 hover:bg-gray-800 transition-all active:scale-[0.99] flex items-center justify-center gap-2 ${
-          isRequesting || isLoading ? "opacity-75 cursor-not-allowed" : ""
-        }`}
+        className="w-full py-4 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-black text-xs uppercase tracking-wider shadow-md hover:bg-neutral-800 dark:hover:bg-neutral-200 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
       >
         {isRequesting ? (
           <>
-            <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span>Requesting Ride...</span>
+            <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+            <span>Contacting Drivers...</span>
           </>
         ) : (
-          <span>Confirm Request ({selectedTier})</span>
+          <>
+            <span>Confirm Request ({selectedTier})</span>
+            <FiArrowRight />
+          </>
         )}
       </button>
+
+      <div className="mt-3 text-center text-[10px] text-neutral-400 font-semibold flex items-center justify-center gap-1.5">
+        <FiShield />
+        <span>Cashfree Escrow Protected & Voyago Telemetry</span>
+      </div>
     </div>
   );
 }

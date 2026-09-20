@@ -2,10 +2,26 @@ import { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axiosClient";
+import { useTheme } from "../context/ThemeContext";
+import Logo from "../components/Logo";
+import {
+  FiSun,
+  FiMoon,
+  FiEye,
+  FiEyeOff,
+  FiArrowRight,
+  FiUser,
+  FiPhone,
+  FiMail,
+  FiLock,
+  FiShield,
+  FiCheckCircle,
+} from "react-icons/fi";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   const nameRef = useRef();
   const mobileRef = useRef();
@@ -20,9 +36,10 @@ export default function Register() {
     const password = passwordRef.current?.value;
 
     if (!name || !mobile || !email || !password) {
-      toast.error("Please fill all fields.");
+      toast.error("Please fill all required fields.");
       return;
     }
+
     setLoading(true);
     try {
       const res = await api.post("/register", {
@@ -32,7 +49,7 @@ export default function Register() {
         mobile,
       });
       if (res.data) {
-        toast.success("Registration successful!");
+        toast.success("Account created successfully! Please sign in.");
         navigate("/login");
       } else {
         toast.error("Registration failed. Please try again.");
@@ -45,90 +62,153 @@ export default function Register() {
   };
 
   return (
-    <div className="w-full h-screen grid md:grid-cols-2 overflow-hidden bg-white text-black font-sans">
-      {/* Left Section: Brand (Hidden on mobile, Black bg) */}
-      <div className="hidden md:flex flex-col justify-between bg-black text-white p-12 lg:p-16 relative">
-        <div className="z-10">
-          <h1 className="text-3xl font-bold tracking-tighter">VOYAGO/UBER</h1>
+    <div className="w-full min-h-screen grid lg:grid-cols-12 bg-neutral-50 dark:bg-black text-black dark:text-white transition-colors font-sans">
+      
+      {/* Left Brand Showcase Column */}
+      <div className="hidden lg:flex lg:col-span-6 bg-black text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden border-r border-neutral-200 dark:border-zinc-800">
+        
+        <div className="z-10 flex items-center justify-between">
+          <Logo size="md" />
+
+          <span className="px-3 py-1 rounded-full bg-white/10 text-[11px] font-bold text-white border border-white/20">
+            Join Voyago
+          </span>
         </div>
-        <div className="z-10 gap-6 flex flex-col">
-          <h2 className="text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1]">
-            Join the<br />
-            movement.
+
+        <div className="z-10 space-y-6 max-w-lg my-auto py-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-700 text-white text-xs font-bold">
+            <FiShield className="w-3.5 h-3.5" />
+            <span>Voyago Shield 24/7 Verified</span>
+          </div>
+
+          <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white leading-tight">
+            Seamless Mobility <br />
+            <span className="text-zinc-400">At Your Fingertips.</span>
           </h2>
-          <p className="text-gray-400 text-lg max-w-md">
-            Register with Voyago to book rides, manage your profile, and enjoy seamless travel experiences.
+
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Create an account in less than a minute. Enjoy instant booking, transparent upfront fares, and priority support.
           </p>
+
+          <div className="pt-4 grid grid-cols-2 gap-4 text-xs">
+            <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-white">
+                <FiCheckCircle className="w-4 h-4 text-white" />
+                <span>Quick Onboarding</span>
+              </div>
+              <p className="text-zinc-400 text-[11px]">Instant phone & email verification.</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-white">
+                <FiCheckCircle className="w-4 h-4 text-white" />
+                <span>Cashfree Ready</span>
+              </div>
+              <p className="text-zinc-400 text-[11px]">Unified digital checkout & wallet.</p>
+            </div>
+          </div>
         </div>
-        <div className="z-10 text-sm text-gray-500">
-          &copy; 2025 Uber/Voyago Clone. All rights reserved.
+
+        <div className="z-10 text-xs text-zinc-500 flex items-center justify-between pt-8 border-t border-zinc-800">
+          <span>&copy; {new Date().getFullYear()} Voyago Technologies Inc.</span>
+          <span className="text-zinc-400">Encrypted User Vault</span>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-tl from-gray-900 to-transparent opacity-40 pointer-events-none" />
       </div>
 
-      {/* Right Section: Form (White bg) */}
-      <div className="flex flex-col justify-center items-center p-6 sm:p-12 md:p-16 w-full max-w-xl mx-auto md:max-w-none overflow-y-auto">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center md:text-left">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Create an account</h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Enter your details below to get started.
+      {/* Right Register Form Column */}
+      <div className="lg:col-span-6 flex flex-col justify-between p-6 sm:p-12 lg:p-16 relative overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="lg:hidden">
+            <Logo size="sm" />
+          </div>
+
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-neutral-100 dark:bg-zinc-900 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white ml-auto border border-neutral-200 dark:border-zinc-800 transition-all"
+            title="Toggle theme"
+          >
+            {isDark ? <FiSun className="w-4 h-4 text-amber-400" /> : <FiMoon className="w-4 h-4 text-black" />}
+          </button>
+        </div>
+
+        {/* Center Register Form */}
+        <div className="max-w-md w-full mx-auto space-y-6 my-auto">
+          <div>
+            <h1 className="text-3xl font-black font-display text-black dark:text-white tracking-tight">
+              Create Account
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+              Enter your basic details to start booking trips instantly.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
+            {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                ref={nameRef}
-                placeholder="John Doe"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-              <input
-                type="tel"
-                ref={mobileRef}
-                placeholder="+1 (555) 000-0000"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                ref={emailRef}
-                placeholder="name@example.com"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-              />
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1 pl-1">
+                Full Name
+              </label>
+              <div className="relative">
+                <FiUser className="absolute left-4 top-3.5 text-neutral-400" />
+                <input
+                  type="text"
+                  ref={nameRef}
+                  placeholder="John Doe"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-black dark:text-white text-sm focus:outline-none focus:border-black dark:focus:border-white transition-all font-medium"
+                />
+              </div>
             </div>
 
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            {/* Mobile Number */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1 pl-1">
+                Mobile Number
+              </label>
               <div className="relative">
+                <FiPhone className="absolute left-4 top-3.5 text-neutral-400" />
+                <input
+                  type="tel"
+                  ref={mobileRef}
+                  placeholder="+91 98765 43210"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-black dark:text-white text-sm focus:outline-none focus:border-black dark:focus:border-white transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1 pl-1">
+                Email Address
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-4 top-3.5 text-neutral-400" />
+                <input
+                  type="email"
+                  ref={emailRef}
+                  placeholder="name@example.com"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-black dark:text-white text-sm focus:outline-none focus:border-black dark:focus:border-white transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1 pl-1">
+                Password
+              </label>
+              <div className="relative">
+                <FiLock className="absolute left-4 top-3.5 text-neutral-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   ref={passwordRef}
-                  placeholder="Create a password"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all pr-12"
+                  placeholder="Create a strong password"
+                  className="w-full pl-11 pr-12 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-black dark:text-white text-sm focus:outline-none focus:border-black dark:focus:border-white transition-all font-medium"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-3.5 text-neutral-400 hover:text-black dark:hover:text-white"
                 >
-                  {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                      <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745A10.02 10.02 0 0021 12c0-5.523-4.477-10-10-10a10.012 10.012 0 00-4.406 1.025L3.28 2.22zm-2.028 11.23a.75.75 0 111.496-.346C4.018 16.29 7.669 18.5 12 18.5c2.324 0 4.414-.64 6.182-1.76l-1.096-1.096A7.95 7.95 0 0112 17c-4.418 0-8-3.582-8-8 0-.493.064-.972.186-1.432L1.252 13.45z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                      <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-                      <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
             </div>
@@ -136,31 +216,35 @@ export default function Register() {
             <button
               onClick={registerSubmit}
               disabled={loading}
-              className={`w-full py-3.5 rounded-lg bg-black text-white font-semibold text-sm transition-all shadow-lg hover:shadow-xl hover:bg-gray-900 active:scale-[0.99] flex items-center justify-center ${loading ? "opacity-75 cursor-not-allowed" : ""
-                }`}
+              className="w-full py-4 rounded-2xl bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 font-black text-sm tracking-wide shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                  Processing...
+                  <span className="h-4 w-4 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin"></span>
+                  <span>Creating Account...</span>
                 </>
               ) : (
-                "Create account"
+                <>
+                  <span>Create Account</span>
+                  <FiArrowRight className="w-4 h-4" />
+                </>
               )}
             </button>
           </div>
 
-          <p className="text-center text-sm text-gray-500">
-            Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-black hover:underline">
-              Sign in
+          <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">
+            Already have a Voyago account?{" "}
+            <Link to="/login" className="font-black text-black dark:text-white underline underline-offset-4">
+              Sign In
             </Link>
           </p>
         </div>
+
+        <div className="pt-6 text-center text-[11px] text-neutral-400">
+          By signing up, you consent to Voyago's Safety Policies and Terms.
+        </div>
       </div>
+
     </div>
   );
 }

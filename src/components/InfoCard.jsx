@@ -1,5 +1,5 @@
-
-import { FiMail, FiPhone, FiUser, FiEdit2 } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import { FiMail, FiPhone, FiEdit2, FiShield, FiSettings, FiCreditCard } from "react-icons/fi";
 
 export default function InfoCard({ user }) {
   const profileImgSrc = user?.profileImg
@@ -9,79 +9,105 @@ export default function InfoCard({ user }) {
     : "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png";
 
   return (
-    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 transition-all hover:shadow-2xl">
-      {/* Header Background */}
-      <div className="h-32 bg-linear-to-r from-gray-900 to-gray-800 relative">
-        <div className="absolute top-4 right-4">
-          <button className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors">
-            <FiEdit2 size={18} />
-          </button>
-        </div>
+    <div className="w-full max-w-3xl bg-white dark:bg-zinc-950 rounded-3xl shadow-sm overflow-hidden border border-neutral-200 dark:border-zinc-800 transition-all">
+      {/* Header Monochromatic Banner */}
+      <div className="h-32 sm:h-36 bg-black text-white p-6 flex justify-end items-start">
+        <Link
+          to="/update/image"
+          className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-zinc-700"
+        >
+          <FiEdit2 size={13} />
+          <span>Change Avatar</span>
+        </Link>
       </div>
 
-      <div className="px-8 pb-8">
-        {/* Profile Image - Overlapping the header */}
-        <div className="relative -mt-16 mb-6 flex justify-center sm:justify-start">
-          <div className="h-32 w-32 rounded-full ring-4 ring-white shadow-lg bg-white overflow-hidden">
-            <img
-              src={profileImgSrc}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
+      <div className="px-6 sm:px-8 pb-8">
+        {/* Profile Image & Member Pill */}
+        <div className="relative -mt-16 mb-6 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
+          <div className="relative">
+            <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-3xl ring-4 ring-white dark:ring-zinc-950 shadow-md bg-neutral-100 dark:bg-zinc-900 overflow-hidden">
+              <img
+                src={profileImgSrc}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <Link
+              to="/update/image"
+              className="absolute bottom-1 right-1 p-2 bg-black text-white dark:bg-white dark:text-black rounded-xl shadow-md transition-transform hover:scale-105 active:scale-95"
+              title="Update profile picture"
+            >
+              <FiEdit2 size={12} />
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-zinc-900 text-black dark:text-white text-xs font-bold border border-neutral-200 dark:border-zinc-800">
+              Verified Passenger
+            </span>
           </div>
         </div>
 
-        {/* User Info */}
+        {/* User Info Details */}
         <div className="space-y-6">
           <div className="text-center sm:text-left">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {user?.name || "User Name"}
+            <h1 className="text-2xl sm:text-3xl font-black font-display text-black dark:text-white">
+              {user?.name || "Passenger"}
             </h1>
-            <p className="text-gray-500 font-medium mt-1">Passenger</p>
+            <p className="text-xs sm:text-sm text-neutral-500 mt-0.5">
+              Voyago Member • Cashfree Escrow Verified
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4 hover:bg-gray-100 transition-colors">
-              <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                <FiMail size={20} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div className="p-4 bg-neutral-50 dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-zinc-800 flex items-center gap-4">
+              <div className="p-3 bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white rounded-xl shrink-0">
+                <FiMail size={18} />
               </div>
-              <div className="overflow-hidden">
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">
+              <div className="min-w-0">
+                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                   Email Address
                 </p>
-                <p className="text-gray-900 font-medium truncate" title={user?.email}>
-                  {user?.email || "No email provided"}
+                <p className="text-black dark:text-white font-bold text-xs sm:text-sm truncate" title={user?.email}>
+                  {user?.email || "Not specified"}
                 </p>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4 hover:bg-gray-100 transition-colors">
-              <div className="p-3 bg-green-100 text-green-600 rounded-lg">
-                <FiPhone size={20} />
+            <div className="p-4 bg-neutral-50 dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-zinc-800 flex items-center gap-4">
+              <div className="p-3 bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white rounded-xl shrink-0">
+                <FiPhone size={18} />
               </div>
-              <div>
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">
-                  Phone Number
+              <div className="min-w-0">
+                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Mobile Number
                 </p>
-                <p className="text-gray-900 font-medium">
-                  {user?.mobile || "No mobile provided"}
+                <p className="text-black dark:text-white font-bold text-xs sm:text-sm">
+                  {user?.mobile || "Not specified"}
                 </p>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4 hover:bg-gray-100 transition-colors md:col-span-2">
-              <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-                <FiUser size={20} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">
-                  Account Status
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  <p className="text-gray-900 font-medium">Active Member</p>
+            <div className="p-4 bg-neutral-50 dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-zinc-800 flex items-center justify-between md:col-span-2">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white rounded-xl shrink-0">
+                  <FiShield size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                    Voyago Shield Telemetry
+                  </p>
+                  <p className="text-black dark:text-white font-bold text-xs sm:text-sm">
+                    Active on all trips with OTP authorization
+                  </p>
                 </div>
               </div>
+              <Link
+                to="/settings"
+                className="px-3 py-1.5 bg-black text-white dark:bg-white dark:text-black rounded-xl text-xs font-bold"
+              >
+                Settings
+              </Link>
             </div>
           </div>
         </div>

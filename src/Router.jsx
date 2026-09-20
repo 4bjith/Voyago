@@ -4,8 +4,8 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RideBooking from "./pages/RideBooking";
-import io from "socket.io-client"
-import { useEffect, useRef, useState } from "react";
+import io from "socket.io-client";
+import { useEffect, useRef } from "react";
 
 import AccountManager from "./pages/AccountManager";
 import CurrentRide from "./pages/CurrentRide";
@@ -13,9 +13,11 @@ import FinalRide from "./pages/FinalRide";
 import ProfileImgUpdateForm from "./components/ProfileImageUpdateForm";
 import RideHistory from "./pages/RideHistory";
 import AdminDashboard from "./pages/AdminDashboard";
+import Settings from "./pages/Settings";
+import Wallet from "./pages/Wallet";
+import HelpCenter from "./pages/HelpCenter";
 
-const baseUrl = "https://backend-uber-model.onrender.com";
-const baseUrl2 = "http://localhost:8080"
+const baseUrl2 = "http://localhost:8080";
 
 function Router() {
   const socketRef = useRef();
@@ -24,16 +26,21 @@ function Router() {
     socketRef.current = io(baseUrl2, {
       transports: ["websocket"],
       reconnection: true,
-    })
+    });
 
     socketRef.current.on("connect", () => {
-      console.log("connected to Socket.IO: ", socketRef.current.id);
-    })
+      console.log("Connected to Socket.IO:", socketRef.current.id);
+    });
 
-    socketRef.current.on("disconnecte", () => {
-      console.log("Disconnected from socket.IO");
-    })
-  }, [socketRef])
+    socketRef.current.on("disconnect", () => {
+      console.log("Disconnected from Socket.IO");
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
   return (
     <>
       <BrowserRouter>
@@ -43,6 +50,10 @@ function Router() {
           <Route path="/register" element={<Register />} />
           <Route path="/bookride" element={<RideBooking socketRef={socketRef} />} />
           <Route path="/account" element={<AccountManager />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/support" element={<HelpCenter />} />
+          <Route path="/help" element={<HelpCenter />} />
           <Route path="/currentride" element={<CurrentRide socketRef={socketRef} />} />
           <Route path="/finalride" element={<FinalRide socketRef={socketRef} />} />
           <Route path="/update/image" element={<ProfileImgUpdateForm />} />

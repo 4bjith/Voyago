@@ -6,7 +6,16 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 import UserStore from "../zustand/UserStore";
 import RideHistory from "./RideHistory";
-import { FiUser, FiSettings, FiClock } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import {
+  FiUser,
+  FiSettings,
+  FiClock,
+  FiCreditCard,
+  FiHelpCircle,
+  FiShield,
+  FiArrowRight,
+} from "react-icons/fi";
 
 export default function AccountManager() {
   const [active, setActive] = useState("profile");
@@ -14,7 +23,7 @@ export default function AccountManager() {
   const [user, setUser] = useState(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["userinfo"],
+    queryKey: ["userinfo", token],
     queryFn: async () => {
       const response = await api.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
@@ -29,78 +38,112 @@ export default function AccountManager() {
   }, [data]);
 
   const menuItems = [
-    { id: "profile", label: "Profile Info", icon: <FiUser size={20} /> },
-    { id: "preference", label: "Preferences", icon: <FiSettings size={20} /> },
-    { id: "history", label: "Ride History", icon: <FiClock size={20} /> },
+    { id: "profile", label: "Profile Info", icon: <FiUser size={18} /> },
+    { id: "history", label: "Ride History", icon: <FiClock size={18} /> },
   ];
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+      <div className="flex items-center justify-center min-h-screen bg-neutral-50 dark:bg-black">
+        <div className="w-10 h-10 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
+  }
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-gray-50">
-      {/* Navbar */}
-      <div id="navbar" className="w-full h-20 fixed top-4 z-50 flex justify-center ">
-      <Navbar />
+    <div className="w-full min-h-screen flex flex-col bg-neutral-50 dark:bg-black text-black dark:text-white transition-colors font-sans">
+      <div id="navbar" className="w-full fixed top-4 z-50 flex justify-center">
+        <Navbar />
       </div>
-      <div className="h-[120px]"></div>
+      <div className="h-24"></div>
 
-      <div className="grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
+      <div className="grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
+          
           {/* Sidebar Navigation */}
-          <div className="w-full md:w-64 shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              <div className="p-6 border-b border-gray-100 bg-gray-900 text-white">
-                <h2 className="text-lg font-bold">Account</h2>
-                <p className="text-sm text-gray-400 mt-1">Manage your settings</p>
+          <div className="w-full md:w-72 shrink-0 space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-3xl shadow-sm border border-neutral-200 dark:border-zinc-800 overflow-hidden sticky top-28">
+              <div className="p-6 border-b border-neutral-100 dark:border-zinc-800 bg-black text-white">
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-1">
+                  <FiShield />
+                  <span>Passenger Account</span>
+                </div>
+                <h2 className="text-xl font-black font-display">{user?.name || "Account Hub"}</h2>
+                <p className="text-xs text-neutral-400 mt-0.5 truncate">{user?.email}</p>
               </div>
-              <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-visible p-2 gap-1">
+
+              <nav className="p-3 space-y-1">
                 {menuItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActive(item.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${active === item.id
-                      ? "bg-black text-white shadow-md"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
+                      active === item.id
+                        ? "bg-black text-white dark:bg-white dark:text-black shadow-sm"
+                        : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-zinc-900"
+                    }`}
                   >
                     {item.icon}
-                    {item.label}
+                    <span>{item.label}</span>
                   </button>
                 ))}
+
+                {/* Direct Links to Full Production Pages */}
+                <Link
+                  to="/wallet"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-zinc-900 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <FiCreditCard size={18} />
+                    <span>Wallet & Cards</span>
+                  </span>
+                  <FiArrowRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
+
+                <Link
+                  to="/settings"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-zinc-900 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <FiSettings size={18} />
+                    <span>Settings</span>
+                  </span>
+                  <FiArrowRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
+
+                <Link
+                  to="/support"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-zinc-900 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <FiHelpCircle size={18} />
+                    <span>Help & FAQ</span>
+                  </span>
+                  <FiArrowRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
               </nav>
             </div>
           </div>
 
           {/* Main Content Area */}
-          <div className="grow">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[500px] p-6 sm:p-8">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {menuItems.find((item) => item.id === active)?.label}
+          <div className="grow w-full min-w-0">
+            <div className="bg-white dark:bg-zinc-950 rounded-3xl shadow-sm border border-neutral-200 dark:border-zinc-800 min-h-[550px] p-6 sm:p-8">
+              
+              <div className="mb-6 border-b border-neutral-100 dark:border-zinc-800 pb-4">
+                <h1 className="text-2xl sm:text-3xl font-black font-display text-black dark:text-white">
+                  {menuItems.find((item) => item.id === active)?.label || "Overview"}
                 </h1>
-                <p className="text-gray-500 mt-1">
-                  Manage your {menuItems.find((item) => item.id === active)?.label.toLowerCase()} here
+                <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+                  Manage your personal details and previous travel logs.
                 </p>
               </div>
 
-              <div className="mt-6">
-                {active === "profile" && user && <InfoCard user={user} />}
-                {active === "preference" && (
-                  <div className="text-center py-12 text-gray-500">
-                    <FiSettings className="mx-auto h-12 w-12 mb-4 text-gray-300" />
-                    <h3 className="text-lg font-medium text-gray-900">Preferences</h3>
-                    <p>User preferences settings coming soon.</p>
-                  </div>
-                )}
-                {active === "history" && <RideHistory />}
-              </div>
+              {active === "profile" && user && <InfoCard user={user} />}
+              {active === "history" && <RideHistory />}
+
             </div>
           </div>
+
         </div>
       </div>
 

@@ -1,20 +1,157 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Outfit', sans-serif;
-  --color-primary: #000000;
-  --color-secondary: #ffffff;
-  --color-accent: #f8f8f8;
-  --color-dark-gray: #1a1a1a;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+
+  /* Monochromatic Color Tokens */
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+
+  --color-dark-950: #000000;
+  --color-dark-900: #09090b;
+  --color-dark-850: #121214;
+  --color-dark-800: #18181b;
+  --color-dark-700: #27272a;
 }
 
-:root {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--color-secondary);
-  color: var(--color-primary);
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* Monochromatic Glassmorphism */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid #e4e4e7;
+  }
+
+  .dark .glass-card {
+    background: rgba(18, 18, 20, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid #27272a;
+  }
+
+  .glass-card-hover {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+  }
+
+  .dark .glass-card-hover:hover {
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.7);
+    border-color: #3f3f46;
+  }
+
+  .gradient-text {
+    color: #000000;
+  }
+
+  .dark .gradient-text {
+    color: #ffffff;
+  }
 }
 
-body {
-  @apply antialiased;
+/* Animations */
+@keyframes radar-pulse-mono {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 var(--radar-color, rgba(0, 0, 0, 0.35));
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 18px rgba(0, 0, 0, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+.animate-radar {
+  --radar-color: rgba(0, 0, 0, 0.35);
+  animation: radar-pulse-mono 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.dark .animate-radar {
+  --radar-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}
+
+/* Body Defaults */
+html, body {
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #000000;
+  letter-spacing: -0.01em;
+}
+
+html.dark, html.dark body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Leaflet Container Overrides */
+.leaflet-container {
+  font-family: inherit !important;
+  border-radius: 1.5rem;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem !important;
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15) !important;
+  font-family: var(--font-sans) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #e4e4e7 !important;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background: #121214 !important;
+  color: #ffffff !important;
+  border: 1px solid #27272a !important;
+}
+
+.dark .leaflet-popup-tip {
+  background: #121214 !important;
 }
