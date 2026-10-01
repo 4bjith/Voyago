@@ -204,7 +204,7 @@ export default function RideBooking({ socketRef }) {
       <div className="h-24"></div>
 
       {select === "timer" && (
-        <Timer setSelect={setSelect} rideId={rideId} />
+        <Timer setSelect={setSelect} rideId={rideId} socketRef={socketRef} />
       )}
 
       {/* Main Responsive Grid Layout */}

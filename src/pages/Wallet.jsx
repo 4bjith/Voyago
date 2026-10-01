@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import api from "../api/axiosClient";
 import PaymentService from "../services/payment.service";
+import MultiChannelPaymentModal from "../components/MultiChannelPaymentModal";
 import {
   FiCreditCard,
   FiPlus,
@@ -16,13 +17,14 @@ import {
   FiCheck,
   FiCheckCircle,
 } from "react-icons/fi";
-import { FaQrcode, FaWallet, FaShieldAlt } from "react-icons/fa";
+import { FaQrcode, FaWallet, FaShieldAlt, FaUniversity } from "react-icons/fa";
 
 export default function Wallet() {
   const token = UserStore((state) => state.token);
   const user = UserStore((state) => state.user);
 
   const [balance, setBalance] = useState(450.0);
+  const [showMultiModal, setShowMultiModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("500");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -363,22 +365,47 @@ export default function Wallet() {
               </button>
               <button
                 type="button"
-                onClick={handleAddFunds}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowMultiModal(true);
+                }}
                 disabled={isProcessing}
                 className="flex-1 py-3.5 rounded-2xl bg-black text-white dark:bg-white dark:text-black text-xs font-black uppercase tracking-wider shadow-md hover:bg-neutral-800 dark:hover:bg-neutral-200 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                {isProcessing ? (
-                  <span>Opening Cashfree...</span>
-                ) : (
-                  <span>Pay ₹{topUpAmount} with Cashfree</span>
-                )}
+                <span>Select Payment Method</span>
+                <FiArrowUpRight />
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Multi-Channel Payment Modal for Wallet Topup */}
+      <MultiChannelPaymentModal
+        isOpen={showMultiModal}
+        onClose={() => setShowMultiModal(false)}
+        amount={Number(topUpAmount || 500)}
+        orderType="WALLET"
+        token={token}
+        onPaymentSuccess={(data) => {
+          const val = Number(topUpAmount || 500);
+          setBalance((prev) => prev + val);
+          setTransactions((prev) => [
+            {
+              id: data.orderId || `TX-${Math.floor(1000 + Math.random() * 9000)}`,
+              title: "Voyago Wallet Top-up",
+              date: "Just now",
+              amount: val,
+              status: `Settled via ${data.channel?.replace("_", " ") || "Cashfree Escrow"}`,
+            },
+            ...prev,
+          ]);
+          toast.success(`Successfully added ₹${val.toFixed(2)} to Voyago Express Wallet!`);
+        }}
+      />
+
       <Footer />
     </div>
   );
 }
+

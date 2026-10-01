@@ -340,14 +340,14 @@ export default function AdminDashboard() {
                       <td className="p-4">
                         <span
                           className={`px-3 py-1 rounded-full text-[11px] font-bold border ${
-                            driver.kycStatus === "approved"
+                            driver.kycStatus === "verified" || driver.kycStatus === "approved"
                               ? "bg-black text-white dark:bg-white dark:text-black border-transparent"
                               : driver.kycStatus === "rejected"
                               ? "bg-neutral-200 dark:bg-zinc-800 text-neutral-600 dark:text-neutral-400 border-neutral-300 dark:border-zinc-700"
-                              : "bg-neutral-100 dark:bg-zinc-900 text-neutral-800 dark:text-neutral-200 border-neutral-300 dark:border-zinc-700"
+                              : "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800 animate-pulse"
                           }`}
                         >
-                          {driver.kycStatus || "pending"}
+                          {driver.kycStatus === "verified" || driver.kycStatus === "approved" ? "Verified" : driver.kycStatus || "Pending"}
                         </span>
                       </td>
                       <td className="p-4 text-center">
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
                             onClick={() =>
                               kycMutation.mutate({
                                 driverId: driver._id,
-                                kycStatus: "approved",
+                                kycStatus: "verified",
                                 notes: "Documents verified by Admin",
                               })
                             }

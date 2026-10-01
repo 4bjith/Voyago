@@ -25,8 +25,10 @@ import {
   FaQrcode,
   FaShieldAlt,
   FaCheckCircle,
+  FaUniversity,
 } from "react-icons/fa";
-import { FiShare2, FiAlertTriangle, FiCheck, FiArrowRight } from "react-icons/fi";
+import { FiShare2, FiAlertTriangle, FiCheck, FiArrowRight, FiCopy } from "react-icons/fi";
+import MultiChannelPaymentModal from "../components/MultiChannelPaymentModal";
 
 const createCustomIcon = (htmlString, className = "", size = [36, 36], anchor = [18, 18]) => {
   return L.divIcon({
@@ -80,7 +82,8 @@ export default function FinalRide({ socketRef }) {
 
   const [showReceipt, setShowReceipt] = useState(false);
   const [paymentDone, setPaymentDone] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("CASHFREE_UPI");
+  const [showMultiModal, setShowMultiModal] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("CREDIT_CARD");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
@@ -252,17 +255,13 @@ export default function FinalRide({ socketRef }) {
   const distanceFare = Math.max(0, fareTotal - baseFare - 10);
   const platformFee = 10;
 
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-
   return (
     <div className="w-full h-screen relative flex flex-col bg-white dark:bg-black font-sans overflow-hidden">
       <div id="navbar" className="w-full fixed top-4 z-50 flex justify-center">
         <Navbar />
       </div>
 
-      <div className="absolute inset-0 z-0">
+      <div className={`absolute inset-0 z-0 ${isDark ? "map-dark-filter" : ""}`}>
         <MapContainer
           center={center}
           zoom={14}
@@ -271,8 +270,9 @@ export default function FinalRide({ socketRef }) {
           zoomControl={false}
         >
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            url={tileUrl}
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            maxZoom={19}
           />
           <FitBounds points={[currentLocation, destination].filter(Boolean)} />
 
@@ -396,66 +396,97 @@ export default function FinalRide({ socketRef }) {
                 </div>
 
                 {/* Monochromatic Payment Methods */}
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider pl-1">
-                    Select Cashfree Payment Channel
+                    Select Payment Method (Cashfree Escrow)
                   </label>
 
-                  <div
-                    onClick={() => setSelectedPaymentMethod("CASHFREE_UPI")}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                      selectedPaymentMethod === "CASHFREE_UPI"
-                        ? "border-black dark:border-white bg-neutral-100 dark:bg-zinc-900"
-                        : "border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center">
-                        <FaQrcode />
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Credit Card */}
+                    <div
+                      onClick={() => {
+                        setSelectedPaymentMethod("CREDIT_CARD");
+                        setShowMultiModal(true);
+                      }}
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all ${
+                        selectedPaymentMethod === "CREDIT_CARD"
+                          ? "border-black dark:border-white bg-neutral-100 dark:bg-zinc-900"
+                          : "border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center mb-2">
+                        <FaCreditCard size={14} />
                       </div>
-                      <div>
-                        <span className="text-sm font-bold text-black dark:text-white">Instant UPI</span>
-                        <p className="text-[11px] text-neutral-500">GPay, PhonePe, Paytm, BHIM</p>
-                      </div>
+                      <span className="text-xs font-bold text-black dark:text-white block">Credit Card</span>
+                      <p className="text-[10px] text-neutral-500">Visa, MC, Amex</p>
                     </div>
-                    {selectedPaymentMethod === "CASHFREE_UPI" && (
-                      <span className="text-xs font-bold text-black dark:text-white bg-white dark:bg-black px-2 py-0.5 rounded border border-neutral-300 dark:border-zinc-700">Selected</span>
-                    )}
-                  </div>
 
-                  <div
-                    onClick={() => setSelectedPaymentMethod("CASHFREE_CARD")}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                      selectedPaymentMethod === "CASHFREE_CARD"
-                        ? "border-black dark:border-white bg-neutral-100 dark:bg-zinc-900"
-                        : "border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center">
-                        <FaCreditCard />
+                    {/* Debit Card */}
+                    <div
+                      onClick={() => {
+                        setSelectedPaymentMethod("DEBIT_CARD");
+                        setShowMultiModal(true);
+                      }}
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all ${
+                        selectedPaymentMethod === "DEBIT_CARD"
+                          ? "border-black dark:border-white bg-neutral-100 dark:bg-zinc-900"
+                          : "border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center mb-2">
+                        <FaCreditCard size={14} />
                       </div>
-                      <div>
-                        <span className="text-sm font-bold text-black dark:text-white">Credit / Debit Card</span>
-                        <p className="text-[11px] text-neutral-500">Visa, Mastercard, RuPay</p>
-                      </div>
+                      <span className="text-xs font-bold text-black dark:text-white block">Debit Card</span>
+                      <p className="text-[10px] text-neutral-500">RuPay, Domestic</p>
                     </div>
-                    {selectedPaymentMethod === "CASHFREE_CARD" && (
-                      <span className="text-xs font-bold text-black dark:text-white bg-white dark:bg-black px-2 py-0.5 rounded border border-neutral-300 dark:border-zinc-700">Selected</span>
-                    )}
+
+                    {/* UPI */}
+                    <div
+                      onClick={() => {
+                        setSelectedPaymentMethod("UPI");
+                        setShowMultiModal(true);
+                      }}
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all ${
+                        selectedPaymentMethod === "UPI"
+                          ? "border-black dark:border-white bg-neutral-100 dark:bg-zinc-900"
+                          : "border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center mb-2">
+                        <FaQrcode size={14} />
+                      </div>
+                      <span className="text-xs font-bold text-black dark:text-white block">Instant UPI</span>
+                      <p className="text-[10px] text-neutral-500">GPay, PhonePe, QR</p>
+                    </div>
+
+                    {/* NetBanking & Bank Wire */}
+                    <div
+                      onClick={() => {
+                        setSelectedPaymentMethod("NETBANKING");
+                        setShowMultiModal(true);
+                      }}
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all ${
+                        selectedPaymentMethod === "NETBANKING" || selectedPaymentMethod === "BANK_TRANSFER"
+                          ? "border-black dark:border-white bg-neutral-100 dark:bg-zinc-900"
+                          : "border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center mb-2">
+                        <FaUniversity size={14} />
+                      </div>
+                      <span className="text-xs font-bold text-black dark:text-white block">Bank Transfer</span>
+                      <p className="text-[10px] text-neutral-500">50+ Banks, NEFT</p>
+                    </div>
                   </div>
                 </div>
 
                 <button
-                  onClick={handleCashfreePayment}
+                  onClick={() => setShowMultiModal(true)}
                   disabled={isSubmittingPayment}
                   className="w-full py-4 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-black text-xs uppercase tracking-wider shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
-                  {isSubmittingPayment ? (
-                    <span>Processing Payment...</span>
-                  ) : (
-                    <span>Pay ₹{fareTotal.toFixed(2)} with Cashfree</span>
-                  )}
+                  <span>Pay ₹{fareTotal.toFixed(2)} — Select Method</span>
+                  <FiArrowRight />
                 </button>
               </div>
             ) : (
@@ -468,7 +499,7 @@ export default function FinalRide({ socketRef }) {
                     Payment Successful
                   </h3>
                   <p className="text-xs text-neutral-500">
-                    Paid ₹{fareTotal.toFixed(2)} via Cashfree. How was your ride with {rideInfo?.driver?.name || "your driver"}?
+                    Paid ₹{fareTotal.toFixed(2)} via Cashfree Escrow. How was your ride with {rideInfo?.driver?.name || "your driver"}?
                   </p>
                 </div>
 
@@ -514,6 +545,22 @@ export default function FinalRide({ socketRef }) {
           </div>
         </div>
       )}
+
+      {/* Multi-Channel Payment Modal */}
+      <MultiChannelPaymentModal
+        isOpen={showMultiModal}
+        onClose={() => setShowMultiModal(false)}
+        rideId={rideId}
+        amount={fareTotal}
+        orderType="RIDE"
+        token={token}
+        onPaymentSuccess={(data) => {
+          setPaymentDone(true);
+          setShowReceipt(true);
+          setShowMultiModal(false);
+        }}
+      />
     </div>
   );
 }
+

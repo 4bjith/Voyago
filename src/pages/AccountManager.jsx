@@ -139,7 +139,7 @@ export default function AccountManager() {
               </div>
 
               {active === "profile" && user && <InfoCard user={user} />}
-              {active === "history" && <RideHistory />}
+              {active === "history" && <RideHistory embedded={true} />}
 
             </div>
           </div>

@@ -180,12 +180,8 @@ export default function CurrentMap2({
     }
   };
 
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-
   return (
-    <div className={`relative overflow-hidden shadow-sm border border-neutral-200 dark:border-zinc-800 ${className}`}>
+    <div className={`relative overflow-hidden shadow-sm border border-neutral-200 dark:border-zinc-800 ${isDark ? "map-dark-filter" : ""} ${className}`}>
       <MapContainer
         center={center}
         zoom={13}
@@ -195,8 +191,9 @@ export default function CurrentMap2({
         style={{ height: "100%", width: "100%", minHeight: "360px" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url={tileUrl}
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          maxZoom={19}
         />
 
         {/* User Marker */}

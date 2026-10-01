@@ -6,10 +6,10 @@ import UserStore from "../zustand/UserStore";
 import { FiX, FiShield } from "react-icons/fi";
 import { FaCar } from "react-icons/fa";
 
-export default function Timer({ setSelect, rideId }) {
+export default function Timer({ setSelect, rideId, socketRef }) {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(true);
-  const duration = 30;
+  const duration = 45;
   const navigate = useNavigate();
   const token = UserStore((state) => state.token);
 
@@ -34,6 +34,30 @@ export default function Timer({ setSelect, rideId }) {
       console.error("Error fetching ride status:", error);
     }
   }, [rideId, navigate, setSelect]);
+
+  // Real-time socket listener for instant driver match
+  useEffect(() => {
+    const socket = socketRef?.current;
+    if (!socket || !rideId) return;
+
+    const handleStatusUpdate = (data) => {
+      if (data?.rideId === rideId && data?.status === "accepted") {
+        setRunning(false);
+        toast.success(`Driver ${data.driver?.name || "Partner"} accepted your ride!`);
+        setSelect("");
+        navigate(`/currentride?rideid=${rideId}`);
+      } else if (data?.rideId === rideId && data?.status === "cancelled") {
+        setRunning(false);
+        toast.error("Ride was cancelled.");
+        setSelect("");
+      }
+    };
+
+    socket.on("ride:status:update", handleStatusUpdate);
+    return () => {
+      socket.off("ride:status:update", handleStatusUpdate);
+    };
+  }, [socketRef, rideId, navigate, setSelect]);
 
   useEffect(() => {
     let interval;

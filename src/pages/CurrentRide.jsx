@@ -192,17 +192,13 @@ export default function CurrentRide({ socketRef }) {
     ? [driverLocation.lat, driverLocation.lng]
     : [28.6139, 77.2090];
 
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-
   return (
     <div className="w-full h-screen relative flex flex-col overflow-hidden bg-white dark:bg-black font-sans">
       <div id="navbar" className="w-full fixed top-4 z-50 flex justify-center">
         <Navbar />
       </div>
 
-      <div className="absolute inset-0 z-0">
+      <div className={`absolute inset-0 z-0 ${isDark ? "map-dark-filter" : ""}`}>
         <MapContainer
           center={center}
           zoom={15}
@@ -210,8 +206,9 @@ export default function CurrentRide({ socketRef }) {
           zoomControl={false}
         >
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            url={tileUrl}
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            maxZoom={19}
           />
           <FitBounds points={[currentLocation, driverLocation].filter(Boolean)} />
 

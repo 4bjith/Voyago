@@ -60,6 +60,8 @@ function Router() {
           <Route path="/payment/callback" element={<PaymentCallback socketRef={socketRef} />} />
           <Route path="/update/image" element={<ProfileImgUpdateForm />} />
           <Route path="/ride-history" element={<RideHistory />} />
+          <Route path="/ridehistory" element={<RideHistory />} />
+          <Route path="/activity" element={<RideHistory />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
 
